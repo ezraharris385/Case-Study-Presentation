@@ -25,7 +25,9 @@
   $("#asOf").textContent = "As of " + CFG.asOfDate;
   document.title = CFG.clientName + " — Site Cockpit";
   function refreshBanner() {
-    var b = $("#sampleBanner"); b.hidden = false;
+    var b = $("#sampleBanner");
+    if (!userLoaded && D.sampleData === false) { b.hidden = true; return; }
+    b.hidden = false;
     if (userLoaded) { b.innerHTML = SHARED ? '<strong>Preview — this screen only.</strong> Not shared or saved; refresh to return to the shared data.' : '<strong>Your data.</strong> Loaded on this device — reset any time from “Load data”.'; b.style.background = "var(--good-soft)"; }
     else if (autoloaded) { b.innerHTML = '<strong>Demo data (greater Chicago).</strong> Loaded from <code>/data</code> — click “Load data” to drop in your own.'; b.style.background = "var(--accent-soft)"; }
     else { b.innerHTML = '<strong>Sample data.</strong> Placeholder figures — click “Load data” to add yours.'; b.style.background = "var(--warn-soft)"; }
@@ -51,7 +53,7 @@
     tileLayer = L.tileLayer(currentDark() ? CFG.map.tilesDark : CFG.map.tilesLight, { attribution: CFG.map.attribution, maxZoom: CFG.map.maxZoom, detectRetina: true }).addTo(map);
   }
   swapTiles();
-  var layers = { demo: L.layerGroup(), sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), nodes: L.layerGroup().addTo(map), labor: L.layerGroup(), alt: L.layerGroup() };
+  var layers = { demo: L.layerGroup(), sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), nodes: L.layerGroup().addTo(map), labor: L.layerGroup(), alt: L.layerGroup().addTo(map) };
 
   function siteIcon(i) { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 28], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
   function altIcon() { return L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11, 11], html: '<div class="mk mk--alt">◇</div>' }); }
@@ -150,50 +152,51 @@
   function closeDrawer() { drawer.hidden = true; currentView = "map"; setActiveNav("map"); }
   $("#drawerClose").addEventListener("click", closeDrawer);
 
-  function scoreBars(scores) {
-    return D.criteria.map(function (c) {
-      var v = (scores && scores[c.key] != null) ? scores[c.key] : null;
-      if (v == null) return "";
-      return '<div class="score-row"><span>' + esc(c.label) + '</span><span class="score-track"><span class="score-fill" style="width:' + v + '%"></span></span><span class="score-val num">' + v + "</span></div>";
-    }).join("");
+  function renderChecklist(list) {
+    if (!list || !list.length) return "";
+    return '<ul class="chk">' + list.map(function (c) {
+      return '<li class="chk--' + c.status + '"><span class="chk__ico">' + (c.status === "met" ? "✓" : "?") + "</span>" + esc(c.label) + "</li>";
+    }).join("") + "</ul>";
+  }
+  function demoMini(s) {
+    var d = s.demo; if (!d) return "";
+    return '<div class="d-section"><h4>10-mile demographics</h4><dl class="kv">' +
+      kv("Population", fmt(d.pop10mi)) + kv("Median HH income", d.medHHinc ? "$" + fmt(d.medHHinc) : "—") +
+      kv("Labor force", fmt(d.laborForce)) + kv("Unemployment", d.unemploymentPct != null ? d.unemploymentPct + "%" : "—") +
+      kv("Transp/warehouse jobs", fmt(d.twEmployment)) + kv("Median age", d.medAge) +
+      kv("Bachelor’s+", d.bachelorsPlusPct != null ? d.bachelorsPlusPct + "%" : "—") + kv("Daytime population", fmt(d.daytimePop)) + "</dl></div>";
   }
   function kv(k, v) { return "<dt>" + esc(k) + "</dt><dd>" + esc(v == null ? "—" : v) + "</dd>"; }
 
   function openSite(s, i) {
     currentView = "sites"; setActiveNav("sites");
     var drive = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + " mi</td><td class=\"num\">" + d.min + " min</td></tr>"; }).join("");
-    var inc = (s.incentives || []).map(function (x) { return '<span class="pill pill--accent">' + esc(x) + "</span>"; }).join(" ");
-    var pros = (s.pros || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
-    var cons = (s.cons || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
-    var bars = scoreBars(s.scores);
     openDrawer(
       '<div class="d-eyebrow eyebrow">Finalist site</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
-      '<div class="d-sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
-      (s.criteriaScore != null ? '<div class="score-head"><span class="score-big num">' + s.criteriaScore + '</span><span class="eyebrow">criteria score / 100</span></div>' : "") +
-      bars +
+      '<div class="d-sub">' + esc(s.address || "") + " · " + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
+      (s.criteriaMet != null ? '<div class="score-head"><span class="score-big num">' + s.criteriaMet + '</span><span class="eyebrow">of ' + s.criteriaTotal + " criteria confirmed</span></div>" : "") +
+      (s.rent ? '<div class="d-section"><h4>Occupancy cost (NNN)</h4><dl class="kv">' +
+        kv("Base rent", s.rent.base != null ? "$" + s.rent.base.toFixed(2) + " /SF" : "—") +
+        kv("Opex + taxes", s.rent.addl != null ? "$" + s.rent.addl.toFixed(2) + " /SF" : "—") +
+        "<dt><strong>All-in</strong></dt><dd><strong>$" + (s.rent.allIn != null ? s.rent.allIn.toFixed(2) : "—") + " /SF</strong></dd></dl></div>" : "") +
       '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' +
-        kv("Status", s.status) + kv("Size", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Clear height", s.clearHeight) +
-        kv("Dock doors", s.dockDoors) + kv("Trailer parking", s.trailerParking) + kv("Power", s.power) +
-        kv("Cold-readiness", s.coldReady) + kv("Refrigeration", s.refrigeration) +
-        kv("Rent (NNN)", s.rentNNN != null ? "$" + Number(s.rentNNN).toFixed(2) + " /SF" : "—") +
-        kv("Opex", s.opex != null ? "$" + Number(s.opex).toFixed(2) + " /SF" : "—") + kv("Expansion", s.expansion) + "</dl></div>" +
-      (drive ? '<div class="d-section"><h4>Drive distances</h4><table class="table"><thead><tr><th>Node</th><th class="num">Dist</th><th class="num">Time</th></tr></thead><tbody>' + drive + "</tbody></table></div>" : "") +
-      (s.labor ? '<div class="d-section"><h4>Labor shed</h4><dl class="kv">' +
-        kv("Pop. within 10 mi", s.labor.pop10mi ? fmt(s.labor.pop10mi) : "—") + kv("Warehouse workforce", s.labor.workforce ? fmt(s.labor.workforce) : "—") +
-        kv("Avg wage", s.labor.avgWage) + kv("Unemployment", s.labor.unemployment) + "</dl></div>" : "") +
-      (inc ? '<div class="d-section"><h4>Incentives</h4><div class="chips">' + inc + "</div></div>" : "") +
-      ((pros || cons) ? '<div class="d-section"><h4>Assessment</h4><div class="prosCons">' +
-        '<div><div class="pc-label pc-label--pro">Strengths</div><ul>' + pros + "</ul></div>" +
-        '<div><div class="pc-label pc-label--con">Watch-outs</div><ul>' + cons + "</ul></div></div></div>" : "")
+        kv("Status", s.status) + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") +
+        kv("Smallest unit", s.smallestSF ? fmt(s.smallestSF) + " SF" : "—") + kv("Clear height", s.clearHeight) +
+        kv("Dock doors", s.dockDoors) + kv("Drive-in", s.driveIns) + kv("Power", s.power) + kv("Sprinklers", s.sprinklers) +
+        kv("Year built", s.yearBuilt) + kv("Owner", s.owner) + "</dl></div>" +
+      '<div class="d-section"><h4>Client criteria</h4>' + renderChecklist(s.checklist) + "</div>" +
+      (drive ? '<div class="d-section"><h4>Drive distances</h4><table class="table"><thead><tr><th>Node</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + drive + "</tbody></table></div>" : "") +
+      demoMini(s)
     );
     map.setView(s.coords, 11, { animate: true });
   }
   function openAlt(s) {
     openDrawer('<div class="d-eyebrow eyebrow">Also considered</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
-      '<div class="d-sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
-      '<dl class="kv">' + kv("Size", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Rent (NNN)", s.rentNNN != null ? "$" + Number(s.rentNNN).toFixed(2) + " /SF" : "—") + "</dl>" +
-      (s.whyOut ? '<div class="d-section"><h4>Why it didn\'t make the shortlist</h4><p class="panel-lead">' + esc(s.whyOut) + "</p></div>" : ""));
-    if (s.coords) map.setView(s.coords, 10, { animate: true });
+      '<div class="d-sub">' + esc(s.address || "") + (s.city ? " · " + esc(s.city) : "") + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
+      '<dl class="kv">' + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") +
+      kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Power", s.power) + kv("Owner", s.owner) + "</dl>" +
+      '<p class="form-note" style="margin-top:12px">Screened in the search; not shortlisted to the final three.</p>');
+    if (s.coords) map.setView(s.coords, 11, { animate: true });
   }
 
   /* ---------- Section views ---------- */
@@ -205,19 +208,11 @@
       return head("Client needs", D.needs.summary && !/^SAMPLE/.test(D.needs.summary) ? D.needs.summary : "From the initial conversation") +
         '<table class="table"><tbody>' + reqs + "</tbody></table>" + (db ? '<div class="d-section"><h4>Non-negotiables</h4><div class="chips">' + db + "</div></div>" : "");
     },
-    swot: function () {
-      function cell(cls, title, arr) { return '<div class="quad__cell ' + cls + '"><h5>' + title + "</h5><ul>" + (arr || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>"; }
-      return head("SWOT", "Strategic read on the engagement") + '<div class="quad">' + cell("quad--s", "Strengths", D.swot.strengths) + cell("quad--w", "Weaknesses", D.swot.weaknesses) + cell("quad--o", "Opportunities", D.swot.opportunities) + cell("quad--t", "Threats", D.swot.threats) + "</div>";
-    },
-    market: function () {
-      var stats = D.market.stats.map(function (s) { return '<div class="stat"><div class="stat__val num">' + esc(s.value) + '</div><div class="stat__lbl">' + esc(s.label) + "</div></div>"; }).join("");
-      return head("Chicago industrial market", D.market.headline) + '<div class="stat-grid">' + stats + "</div><p class=\"panel-lead\">" + esc(D.market.note) + '</p><p class="form-note">Source: ' + esc(D.market.source) + "</p>";
-    },
     sites: function () {
       var cards = (D.sites || []).map(function (s, i) {
         return '<button class="stat" style="text-align:left;cursor:pointer;width:100%;margin-bottom:8px" data-site="' + i + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><strong>' + (i + 1) + ". " + esc(clean(s.name)) +
-          '</strong>' + (s.criteriaScore != null ? '<span class="score-big num" style="font-size:1.4rem">' + s.criteriaScore + "</span>" : "") + "</div>" +
-          '<div class="stat__lbl">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + (s.rentNNN != null ? " · $" + Number(s.rentNNN).toFixed(2) + " NNN" : "") + "</div></button>";
+          '</strong>' + (s.criteriaMet != null ? '<span class="score-big num" style="font-size:1.3rem">' + s.criteriaMet + "/" + s.criteriaTotal + "</span>" : "") + "</div>" +
+          '<div class="stat__lbl">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + (s.rent && s.rent.allIn != null ? " · $" + s.rent.allIn.toFixed(2) + " NNN all-in" : "") + "</div></button>";
       }).join("");
       return head("Site detail", "Tap a site to open its full profile (or a pin on the map)") + (cards || '<p class="panel-lead">No sites loaded yet.</p>');
     },
@@ -229,47 +224,32 @@
       return head("Drive distances", "To intermodal, air-freight, downtown & interstates") + blocks;
     },
     labor: function () {
-      var rows = (D.sites || []).map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + "</td><td class=\"num\">" + (l.pop10mi ? fmt(l.pop10mi) : "—") + "</td><td class=\"num\">" + (l.workforce ? fmt(l.workforce) : "—") + "</td><td class=\"num\">" + esc(l.avgWage || "—") + "</td><td class=\"num\">" + esc(l.unemployment || "—") + "</td></tr>"; }).join("");
-      var demoTable = "";
-      if (D.demographics && D.demographics.points && D.demographics.points.length) {
-        var metric = D.demographics.metric;
-        var top = D.demographics.points.slice().sort(function (a, b) { return (b.metrics[metric] || 0) - (a.metrics[metric] || 0); }).slice(0, 8);
-        demoTable = '<div class="d-section"><h4>Demographic areas <span class="form-note">(' + esc(metric) + ", top 8)</span></h4><table class=\"table\"><tbody>" +
-          top.map(function (p) { return "<tr><td>" + esc(p.name) + '</td><td class="num">' + fmt(p.metrics[metric]) + "</td></tr>"; }).join("") + "</tbody></table></div>";
-      }
-      return head("Labor forces", "Workforce within reach of each finalist") +
-        '<table class="table"><thead><tr><th>Site</th><th class="num">Pop 10mi</th><th class="num">WH workforce</th><th class="num">Avg wage</th><th class="num">Unemp.</th></tr></thead><tbody>' + rows + "</tbody></table>" +
-        '<p class="form-note">Toggle “Demographics” + “Labor shed” on the map for the draw areas.</p>' + demoTable;
+      var rows = (D.sites || []).map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + "</td><td class=\"num\">" + (l.pop10mi ? fmt(l.pop10mi) : "—") + "</td><td class=\"num\">" + (l.workforce ? fmt(l.workforce) : "—") + "</td><td class=\"num\">" + (l.twEmployment ? fmt(l.twEmployment) : "—") + "</td><td class=\"num\">" + esc(l.unemployment || "—") + "</td></tr>"; }).join("");
+      return head("Labor forces", "Workforce within 10 miles of each finalist") +
+        '<table class="table"><thead><tr><th>Site</th><th class="num">Pop 10mi</th><th class="num">Labor force</th><th class="num">Transp/whse jobs</th><th class="num">Unemp.</th></tr></thead><tbody>' + rows + "</tbody></table>" +
+        '<p class="form-note">Transport &amp; warehousing employment is the cold-chain-relevant labor pool. Toggle “Labor shed” on the map for the ~20-mile draw.</p>';
     },
     criteria: function () {
       var sites = D.sites || [];
-      var rows = D.criteria.map(function (c) {
-        var cells = sites.map(function (s) { var v = (s.scores && s.scores[c.key] != null) ? s.scores[c.key] : "—"; return '<td class="num">' + v + "</td>"; }).join("");
+      var rows = D.criteria.map(function (c, ci) {
+        var cells = sites.map(function (s) { var st = (s.checklist && s.checklist[ci]) ? s.checklist[ci].status : null; return '<td class="num">' + (st === "met" ? '<span class="chk__ico chk--met">✓</span>' : st === "confirm" ? '<span class="chk__ico chk--confirm">?</span>' : "—") + "</td>"; }).join("");
         return "<tr><td>" + esc(c.label) + "</td>" + cells + "</tr>";
       }).join("");
       var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + "</th>"; }).join("");
-      var totals = sites.map(function (s) { return '<td class="num"><strong>' + (s.criteriaScore != null ? s.criteriaScore : "—") + "</strong></td>"; }).join("");
-      return head("Criteria scores", "Per-site scorecard (sites keyed 1–" + sites.length + " on the map)") +
-        '<table class="table"><thead><tr><th>Criterion</th>' + heads + "</tr></thead><tbody>" + rows + '<tr><td><strong>Overall</strong></td>' + totals + "</tr></tbody></table>" +
-        '<p class="form-note">' + sites.map(function (s, i) { return (i + 1) + " = " + esc(s.city); }).join(" · ") + "</p>";
+      var totals = sites.map(function (s) { return '<td class="num"><strong>' + (s.criteriaMet != null ? s.criteriaMet + "/" + s.criteriaTotal : "—") + "</strong></td>"; }).join("");
+      return head("Criteria scores", "Client's 10-point checklist — ✓ confirmed from data, ? to verify") +
+        '<table class="table"><thead><tr><th>Criterion</th>' + heads + "</tr></thead><tbody>" + rows + '<tr><td><strong>Confirmed</strong></td>' + totals + "</tr></tbody></table>" +
+        '<p class="form-note">' + sites.map(function (s, i) { return (i + 1) + " = " + esc(s.city); }).join(" · ") + " · “?” = confirm on tour (floor drains, backup power).</p>";
     },
-    lease: function () {
-      var rows = D.leaseTerms.terms.map(function (t) { return "<tr><td>" + esc(t.label) + "</td><td>" + esc(t.value) + "</td></tr>"; }).join("");
-      return head("Key lease terms", D.leaseTerms.summary) + '<table class="table"><tbody>' + rows + "</tbody></table>";
+    demographics: function () {
+      var sites = D.sites || [];
+      if (!sites.length || !sites[0].demo) return head("Demographics", "") + '<p class="panel-lead">No demographics loaded.</p>';
+      var metrics = [["Population (10 mi)", "pop10mi", fmt], ["Median HH income", "medHHinc", function (v) { return "$" + fmt(v); }], ["Avg HH income", "avgHHinc", function (v) { return "$" + fmt(v); }], ["Labor force", "laborForce", fmt], ["Unemployment", "unemploymentPct", function (v) { return v + "%"; }], ["Transp/warehouse jobs", "twEmployment", fmt], ["Manufacturing jobs", "manuf", fmt], ["Median age", "medAge", function (v) { return v; }], ["Bachelor’s+", "bachelorsPlusPct", function (v) { return v + "%"; }], ["Daytime population", "daytimePop", fmt]];
+      var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + ". " + esc(s.city) + "</th>"; }).join("");
+      var rows = metrics.map(function (m) { var cells = sites.map(function (s) { return '<td class="num">' + (s.demo[m[1]] != null ? m[2](s.demo[m[1]]) : "—") + "</td>"; }).join(""); return "<tr><td>" + m[0] + "</td>" + cells + "</tr>"; }).join("");
+      return head("Demographics", "10-mile trade area around each finalist (current-year estimates)") +
+        '<table class="table"><thead><tr><th>Metric</th>' + heads + "</tr></thead><tbody>" + rows + "</tbody></table>";
     },
-    tco: function () {
-      var yrs = D.tcoAssumptions.termYears;
-      var palette = { rent: css("--accent"), opex: css("--navy"), power: css("--warn"), labor: css("--ink-muted"), ti: css("--site-alt") };
-      function compute(s) { var t = s.tco || {}, sf = s.sizeSF || 0; var rent = (t.rentPerSF || 0) * sf * yrs, opex = (t.opexPerSF || 0) * sf * yrs, power = (t.powerPerSF || 0) * sf * yrs, labor = (t.laborAnnual || 0) * yrs, ti = (t.tiPerSF || 0) * sf; var gross = rent + opex + power + labor + ti; return { rent: rent, opex: opex, power: power, labor: labor, ti: ti, gross: gross, inc: t.incentivesTotal || 0, net: gross - (t.incentivesTotal || 0) }; }
-      var withTco = (D.sites || []).filter(function (s) { return s.tco; });
-      if (!withTco.length) return head("Incentives & TCO", "5-year total cost of occupancy") + '<p class="panel-lead">No TCO inputs in the current data. Add TCO columns (rent/opex/power per SF, labor, fit-out, incentives) to see the model.</p>';
-      var comps = withTco.map(compute); var maxGross = Math.max.apply(null, comps.map(function (c) { return c.gross; }));
-      var blocks = withTco.map(function (s, i) { var c = comps[i]; function seg(k, color) { return '<i style="width:' + (c[k] / c.gross * 100) + "%;background:" + color + '"></i>'; }
-        return '<div class="d-section"><h4>' + esc(clean(s.name)) + "</h4><div class=\"stack\" style=\"width:" + (c.gross / maxGross * 100) + '%">' + seg("rent", palette.rent) + seg("opex", palette.opex) + seg("power", palette.power) + seg("labor", palette.labor) + seg("ti", palette.ti) + "</div><dl class=\"kv\" style=\"grid-template-columns:150px 1fr\">" + kv("Gross " + yrs + "-yr", moneyM(c.gross)) + kv("Incentives", "− " + moneyM(c.inc)) + "<dt><strong>Net " + yrs + "-yr TCO</strong></dt><dd><strong>" + moneyM(c.net) + "</strong></dd></dl></div>"; }).join("");
-      return head("Incentives & TCO", D.tcoAssumptions.note) + '<div class="stack-legend"><span><i style="background:' + palette.rent + '"></i>Rent</span><span><i style="background:' + palette.opex + '"></i>Opex/tax</span><span><i style="background:' + palette.power + '"></i>Power</span><span><i style="background:' + palette.labor + '"></i>Labor</span><span><i style="background:' + palette.ti + '"></i>Fit-out</span></div>' + blocks;
-    },
-    timeline: function () { return head("Deliverable timeline", "Path from today to occupancy") + '<ul class="tl">' + D.timeline.map(function (t) { return '<li class="' + (t.status === "done" ? "done" : t.status === "active" ? "active" : "") + '"><div class="tl__phase">' + esc(t.phase) + '</div><div class="tl__label">' + esc(t.label) + '</div><div class="tl__date">' + esc(t.date) + "</div></li>"; }).join("") + "</ul>"; },
-    next: function () { return head("Next steps", "What we do coming out of this meeting") + '<ul class="list-clean">' + D.nextSteps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; },
     survey: function () { return surveyHTML(); },
   };
 

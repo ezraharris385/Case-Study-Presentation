@@ -1,240 +1,824 @@
-/* ============================================================
-   CASE DATA — single source of truth for BOTH builds.
-   Everything below marked "SAMPLE" is illustrative placeholder
-   data so the map renders during development. Replace with the
-   real case data (the intake template maps 1:1 to these fields).
-   Units are noted inline. Coordinates are [lat, lng].
-   ============================================================ */
 window.CASE_DATA = {
-
-  sampleData: true, // <- flip to false once real data is in; hides the "sample data" banner
-
-  /* ---- Client needs (from the initial call) ---- */
-  needs: {
-    summary: "SAMPLE — Replace with the needs captured on the initial call.",
-    requirements: [
-      { label: "Facility size", value: "250,000–300,000 SF" },
-      { label: "Temperature", value: "70% freezer (-10°F) / 30% cooler (34°F)" },
-      { label: "Power", value: "≥ 4 MW service, redundant feed" },
-      { label: "Throughput", value: "Regional DC — 40 dock doors, cross-dock" },
-      { label: "Timeline", value: "Occupancy within 12–18 months" },
-      { label: "Labor", value: "180–220 FTE at stabilization" },
+  "sampleData": false,
+  "_loaded": true,
+  "needs": {
+    "summary": "",
+    "requirements": [
+      {
+        "label": "Facility size",
+        "value": "60,000–75,000 SF, option to scale to 100,000"
+      },
+      {
+        "label": "Cold storage",
+        "value": "40,000 SF of cold storage"
+      },
+      {
+        "label": "Transportation & logistics",
+        "value": "10+ temperature-controlled dock doors, 1 drive-in door, 30' min clear height"
+      },
+      {
+        "label": "Utility infrastructure",
+        "value": "Heavy power, floor drains, backup power"
+      },
+      {
+        "label": "Labor",
+        "value": "Access to hourly workforce"
+      },
+      {
+        "label": "Timeline",
+        "value": "Operational in < 12 months"
+      }
     ],
-    dealBreakers: ["No rail-served requirement", "Must be ≤ 45 min to O'Hare cold air-freight", "Ammonia-permittable"],
+    "dealBreakers": []
   },
-
-  /* ---- SWOT ---- */
-  swot: {
-    strengths:  ["SAMPLE — established Midwest customer base", "Strong balance sheet for build-to-suit"],
-    weaknesses: ["SAMPLE — aging existing facility at capacity", "Labor retention in freezer roles"],
-    opportunities: ["SAMPLE — e-grocery / cold-chain demand growth", "State + county incentives for large employers"],
-    threats: ["SAMPLE — rising power costs", "Industrial rent escalation in core submarkets"],
-  },
-
-  /* ---- Chicago industrial market snapshot ---- */
-  market: {
-    headline: "SAMPLE — Greater Chicago industrial market",
-    stats: [
-      { label: "Industrial vacancy", value: "5.4%", trend: "up" },
-      { label: "Avg asking rent (NNN)", value: "$8.10 /SF", trend: "up" },
-      { label: "Rent growth (YoY)", value: "+6.2%", trend: "up" },
-      { label: "Under construction", value: "18.5M SF", trend: "down" },
-      { label: "Cold-storage rent premium", value: "2–3× dry", trend: "flat" },
-    ],
-    note: "SAMPLE — Cold storage remains supply-constrained; power availability and freezer-ready shells are the binding constraints, not land.",
-    source: "Placeholder — replace with your market source (CBRE/JLL/C&W, etc.)",
-  },
-
-  /* ---- Scoring criteria (shown as per-site scorecard; not a live ranker) ---- */
-  criteria: [
-    { key: "power",      label: "Power & utilities",     hint: "Electrical capacity, redundancy, ammonia permitting" },
-    { key: "labor",      label: "Labor availability",    hint: "Workforce depth, wages, freezer-role retention" },
-    { key: "access",     label: "Logistics access",      hint: "Interstate, intermodal, air-freight drive times" },
-    { key: "cost",       label: "Occupancy cost",        hint: "Rent + opex + taxes" },
-    { key: "incentives", label: "Incentives",            hint: "State/local abatements & credits" },
-    { key: "building",   label: "Building suitability",  hint: "Clear height, freezer-readiness, expansion" },
-    { key: "reach",      label: "Market reach",          hint: "Population / customers within drive time" },
-  ],
-
-  /* ---- PRIMARY sites (full data — the finalists) ---- */
-  sites: [
+  "criteria": [
     {
-      id: "elwood",
-      tier: "primary",
-      name: "SAMPLE — Elwood / CenterPoint",
-      city: "Elwood, IL",
-      submarket: "I-80 / Joliet Intermodal",
-      coords: [41.397, -88.108],
-      status: "Existing shell + expansion pad",
-      sizeSF: 285000,
-      clearHeight: "40'",
-      dockDoors: 44,
-      trailerParking: 120,
-      power: "5 MW available, dual feed",
-      coldReady: "Freezer-convertible shell",
-      refrigeration: "Ammonia-permittable",
-      rentNNN: 7.25,          // $/SF/yr
-      opex: 2.10,             // $/SF/yr taxes+CAM+insurance
-      expansion: "Up to +150,000 SF on pad",
-      criteriaScore: 86,      // overall 0–100
-      scores: { power: 90, labor: 82, access: 95, cost: 80, incentives: 88, building: 84, reach: 78 },
-      drive: [ // to key nodes — miles & minutes
-        { node: "BNSF Logistics Park", miles: 3, min: 6 },
-        { node: "I-80", miles: 2, min: 4 },
-        { node: "O'Hare (ORD)", miles: 46, min: 52 },
-        { node: "Chicago Loop", miles: 42, min: 50 },
+      "key": "c0",
+      "label": "60,000–75,000 SF"
+    },
+    {
+      "key": "c1",
+      "label": "Scale to 100,000 SF"
+    },
+    {
+      "key": "c2",
+      "label": "10+ dock doors"
+    },
+    {
+      "key": "c3",
+      "label": "1 drive-in door"
+    },
+    {
+      "key": "c4",
+      "label": "30' clear height"
+    },
+    {
+      "key": "c5",
+      "label": "Heavy power"
+    },
+    {
+      "key": "c6",
+      "label": "Floor drains"
+    },
+    {
+      "key": "c7",
+      "label": "Backup power"
+    },
+    {
+      "key": "c8",
+      "label": "Access to hourly workforce"
+    },
+    {
+      "key": "c9",
+      "label": "Operational in < 12 months"
+    }
+  ],
+  "sites": [
+    {
+      "id": "wilke",
+      "tier": "primary",
+      "name": "Northwest O'Hare Gateway Center- Building #1",
+      "address": "3625 N Wilke Rd",
+      "city": "Arlington Heights",
+      "submarket": "Northwest Cook",
+      "county": "Cook",
+      "coords": [
+        42.1416,
+        -88.00317
       ],
-      labor: { pop10mi: 210000, workforce: 96000, avgWage: "$19.80/hr", unemployment: "4.6%" },
-      incentives: ["Will County property-tax abatement", "IL Enterprise Zone (materials/utility)", "EDGE credits (jobs)"],
-      tco: { rentPerSF: 7.25, opexPerSF: 2.10, powerPerSF: 3.40, laborAnnual: 8600000, tiPerSF: 45, incentivesTotal: 6200000 },
-      pros: ["Best logistics access (intermodal + I-80)", "Freezer-convertible shell shortens timeline"],
-      cons: ["Longer reach to dense north/west consumers", "IL property-tax load"],
-      note: "SAMPLE site — replace with real finalist.",
-    },
-    {
-      id: "i55",
-      tier: "primary",
-      name: "SAMPLE — Bolingbrook / I-55",
-      city: "Bolingbrook, IL",
-      submarket: "I-55 Corridor",
-      coords: [41.699, -88.069],
-      status: "Spec building, cold-capable",
-      sizeSF: 262000,
-      clearHeight: "36'",
-      dockDoors: 40,
-      trailerParking: 88,
-      power: "4 MW available",
-      coldReady: "Dry shell, cold build-out required",
-      refrigeration: "Ammonia-permittable",
-      rentNNN: 8.95,
-      opex: 2.65,
-      expansion: "Limited (site-constrained)",
-      criteriaScore: 81,
-      scores: { power: 78, labor: 90, access: 88, cost: 68, incentives: 72, building: 80, reach: 92 },
-      drive: [
-        { node: "I-55", miles: 1, min: 3 },
-        { node: "O'Hare (ORD)", miles: 26, min: 32 },
-        { node: "Chicago Loop", miles: 30, min: 38 },
-        { node: "UP Global IV", miles: 16, min: 20 },
+      "status": "Existing",
+      "sizeSF": 205285,
+      "availSF": 148143,
+      "smallestSF": 22000,
+      "clearHeight": "32'",
+      "dockDoors": 42,
+      "driveIns": "2",
+      "power": "2000-3000a/277v 3p",
+      "sprinklers": "ESFR",
+      "owner": null,
+      "yearBuilt": 2024,
+      "rent": {
+        "base": 11.3,
+        "addl": 5.63,
+        "allIn": 16.93
+      },
+      "criteriaMet": 8,
+      "criteriaTotal": 10,
+      "checklist": [
+        {
+          "label": "60,000–75,000 SF",
+          "status": "met"
+        },
+        {
+          "label": "Scale to 100,000 SF",
+          "status": "met"
+        },
+        {
+          "label": "10+ dock doors",
+          "status": "met"
+        },
+        {
+          "label": "1 drive-in door",
+          "status": "met"
+        },
+        {
+          "label": "30' clear height",
+          "status": "met"
+        },
+        {
+          "label": "Heavy power",
+          "status": "met"
+        },
+        {
+          "label": "Floor drains",
+          "status": "confirm"
+        },
+        {
+          "label": "Backup power",
+          "status": "confirm"
+        },
+        {
+          "label": "Access to hourly workforce",
+          "status": "met"
+        },
+        {
+          "label": "Operational in < 12 months",
+          "status": "met"
+        }
       ],
-      labor: { pop10mi: 640000, workforce: 330000, avgWage: "$20.90/hr", unemployment: "4.1%" },
-      incentives: ["IL Enterprise Zone (partial)", "Local TIF (case-by-case)"],
-      tco: { rentPerSF: 8.95, opexPerSF: 2.65, powerPerSF: 3.55, laborAnnual: 9600000, tiPerSF: 78, incentivesTotal: 2800000 },
-      pros: ["Deepest labor pool + closest to consumers", "Fastest to O'Hare cold air-freight"],
-      cons: ["Highest occupancy cost", "Cold build-out lengthens timeline & TI"],
-      note: "SAMPLE site — replace with real finalist.",
-    },
-    {
-      id: "kenosha",
-      tier: "primary",
-      name: "SAMPLE — Kenosha / I-94",
-      city: "Kenosha, WI",
-      submarket: "SE Wisconsin / I-94",
-      coords: [42.568, -87.898],
-      status: "Build-to-suit land",
-      sizeSF: 300000,
-      clearHeight: "40'",
-      dockDoors: 48,
-      trailerParking: 140,
-      power: "6 MW available",
-      coldReady: "Ground-up freezer BTS",
-      refrigeration: "Ammonia-permittable",
-      rentNNN: 6.80,
-      opex: 1.55,
-      expansion: "Up to +200,000 SF (land)",
-      criteriaScore: 83,
-      scores: { power: 94, labor: 76, access: 82, cost: 90, incentives: 92, building: 88, reach: 70 },
-      drive: [
-        { node: "I-94", miles: 2, min: 4 },
-        { node: "O'Hare (ORD)", miles: 48, min: 55 },
-        { node: "Milwaukee", miles: 35, min: 40 },
-        { node: "Chicago Loop", miles: 52, min: 60 },
+      "drive": [
+        {
+          "node": "O’Hare (ORD)",
+          "miles": 12.3,
+          "min": 25
+        },
+        {
+          "node": "Chicago Loop",
+          "miles": 26.4,
+          "min": 53
+        },
+        {
+          "node": "Milwaukee",
+          "miles": 62.2,
+          "min": 124
+        }
       ],
-      labor: { pop10mi: 190000, workforce: 92000, avgWage: "$18.40/hr", unemployment: "3.9%" },
-      incentives: ["WEDC Enterprise Zone credits", "WI Business Development Tax Credit", "No state personal-property tax", "TIF"],
-      tco: { rentPerSF: 6.80, opexPerSF: 1.55, powerPerSF: 3.05, laborAnnual: 8100000, tiPerSF: 0, incentivesTotal: 9500000 },
-      pros: ["Lowest all-in cost + strongest incentives", "Chicago + Milwaukee combined reach", "Cheapest power"],
-      cons: ["Longest lead time (ground-up)", "Shallower local labor; further from O'Hare"],
-      note: "SAMPLE site — replace with real finalist.",
+      "labor": {
+        "pop10mi": 785464,
+        "workforce": 434955,
+        "unemployment": "2.5%",
+        "twEmployment": 26298
+      },
+      "demo": {
+        "pop10mi": 785464,
+        "medHHinc": 119009,
+        "avgHHinc": 169631,
+        "perCapita": 67890,
+        "medAge": 43.1,
+        "laborForce": 434955,
+        "employed": 424118,
+        "unemployedN": 10837,
+        "unemploymentPct": 2.5,
+        "twEmployment": 26298,
+        "manuf": 54009,
+        "bachelorsPlusPct": 58.6,
+        "businesses": 33906,
+        "employees": 550651,
+        "daytimePop": 951919
+      }
     },
-  ],
-
-  /* ---- ALSO-CONSIDERED sites (lighter data; not scored) ---- */
-  alsoConsidered: [
     {
-      id: "rockford", tier: "alt", name: "SAMPLE — Rockford / I-39", city: "Rockford, IL",
-      submarket: "I-39 / I-90", coords: [42.246, -89.06],
-      rentNNN: 5.90, sizeSF: 320000,
-      whyOut: "Lowest rent but labor depth and consumer reach too thin for regional DC role.",
+      "id": "birchwood",
+      "tier": "primary",
+      "name": "Northeast O'Hare Industrial Center",
+      "address": "1750-1780 Birchwood Ave",
+      "city": "Des Plaines",
+      "submarket": "O'Hare",
+      "county": "Cook",
+      "coords": [
+        42.01572,
+        -87.88162
+      ],
+      "status": "Existing",
+      "sizeSF": 139425,
+      "availSF": 139425,
+      "smallestSF": 40640,
+      "clearHeight": "32'",
+      "dockDoors": 40,
+      "driveIns": "2",
+      "power": "2400a/480v 3p",
+      "sprinklers": "ESFR",
+      "owner": "Morgan Stanley & Co. LLC",
+      "yearBuilt": 2015,
+      "rent": {
+        "base": 10.6,
+        "addl": 3.29,
+        "allIn": 13.88
+      },
+      "criteriaMet": 8,
+      "criteriaTotal": 10,
+      "checklist": [
+        {
+          "label": "60,000–75,000 SF",
+          "status": "met"
+        },
+        {
+          "label": "Scale to 100,000 SF",
+          "status": "met"
+        },
+        {
+          "label": "10+ dock doors",
+          "status": "met"
+        },
+        {
+          "label": "1 drive-in door",
+          "status": "met"
+        },
+        {
+          "label": "30' clear height",
+          "status": "met"
+        },
+        {
+          "label": "Heavy power",
+          "status": "met"
+        },
+        {
+          "label": "Floor drains",
+          "status": "confirm"
+        },
+        {
+          "label": "Backup power",
+          "status": "confirm"
+        },
+        {
+          "label": "Access to hourly workforce",
+          "status": "met"
+        },
+        {
+          "label": "Operational in < 12 months",
+          "status": "met"
+        }
+      ],
+      "drive": [
+        {
+          "node": "O’Hare (ORD)",
+          "miles": 2.8,
+          "min": 6
+        },
+        {
+          "node": "Chicago Loop",
+          "miles": 16.1,
+          "min": 32
+        },
+        {
+          "node": "Milwaukee",
+          "miles": 70.7,
+          "min": 141
+        }
+      ],
+      "labor": {
+        "pop10mi": 1594120,
+        "workforce": 870927,
+        "unemployment": "3.4%",
+        "twEmployment": 64071
+      },
+      "demo": {
+        "pop10mi": 1594120,
+        "medHHinc": 101160,
+        "avgHHinc": 144693,
+        "perCapita": 56414,
+        "medAge": 41.6,
+        "laborForce": 870927,
+        "employed": 841340,
+        "unemployedN": 29587,
+        "unemploymentPct": 3.4,
+        "twEmployment": 64071,
+        "manuf": 91463,
+        "bachelorsPlusPct": 47.4,
+        "businesses": 61557,
+        "employees": 860214,
+        "daytimePop": 1709877
+      }
     },
     {
-      id: "gary", tier: "alt", name: "SAMPLE — NW Indiana / I-80-94", city: "Hammond, IN",
-      submarket: "Northwest Indiana", coords: [41.593, -87.35],
-      rentNNN: 6.40, sizeSF: 240000,
-      whyOut: "Good tax profile, but available power fell short of the 4 MW minimum.",
+      "id": "sellstrom",
+      "tier": "primary",
+      "name": "Building 2",
+      "address": "150 Sellstrom Dr",
+      "city": "Palatine",
+      "submarket": "Northwest Cook",
+      "county": "Cook",
+      "coords": [
+        42.10586,
+        -88.03567
+      ],
+      "status": "Existing",
+      "sizeSF": 153687,
+      "availSF": 153687,
+      "smallestSF": 50000,
+      "clearHeight": "32'",
+      "dockDoors": 24,
+      "driveIns": "2",
+      "power": "4000a",
+      "sprinklers": "ESFR",
+      "owner": "MWI Property Group",
+      "yearBuilt": 2022,
+      "rent": {
+        "base": 9.6,
+        "addl": 11.23,
+        "allIn": 20.83
+      },
+      "criteriaMet": 8,
+      "criteriaTotal": 10,
+      "checklist": [
+        {
+          "label": "60,000–75,000 SF",
+          "status": "met"
+        },
+        {
+          "label": "Scale to 100,000 SF",
+          "status": "met"
+        },
+        {
+          "label": "10+ dock doors",
+          "status": "met"
+        },
+        {
+          "label": "1 drive-in door",
+          "status": "met"
+        },
+        {
+          "label": "30' clear height",
+          "status": "met"
+        },
+        {
+          "label": "Heavy power",
+          "status": "met"
+        },
+        {
+          "label": "Floor drains",
+          "status": "confirm"
+        },
+        {
+          "label": "Backup power",
+          "status": "confirm"
+        },
+        {
+          "label": "Access to hourly workforce",
+          "status": "met"
+        },
+        {
+          "label": "Operational in < 12 months",
+          "status": "met"
+        }
+      ],
+      "drive": [
+        {
+          "node": "O’Hare (ORD)",
+          "miles": 11.1,
+          "min": 22
+        },
+        {
+          "node": "Chicago Loop",
+          "miles": 26.1,
+          "min": 52
+        },
+        {
+          "node": "Milwaukee",
+          "miles": 64.8,
+          "min": 130
+        }
+      ],
+      "labor": {
+        "pop10mi": 796906,
+        "workforce": 445988,
+        "unemployment": "2.6%",
+        "twEmployment": 30515
+      },
+      "demo": {
+        "pop10mi": 796906,
+        "medHHinc": 113224,
+        "avgHHinc": 157193,
+        "perCapita": 62667,
+        "medAge": 42.5,
+        "laborForce": 445988,
+        "employed": 434600,
+        "unemployedN": 11388,
+        "unemploymentPct": 2.6,
+        "twEmployment": 30515,
+        "manuf": 56316,
+        "bachelorsPlusPct": 54.4,
+        "businesses": 33913,
+        "employees": 561109,
+        "daytimePop": 955045
+      }
+    }
+  ],
+  "alsoConsidered": [
+    {
+      "id": "alt2",
+      "tier": "alt",
+      "name": "55 W Army Trail Dr",
+      "address": "55 W Army Trail Dr",
+      "city": "Glendale Heights",
+      "submarket": "North DuPage",
+      "coords": [
+        41.93719,
+        -88.09439
+      ],
+      "sizeSF": 139429,
+      "availSF": 70117,
+      "clearHeight": "32'",
+      "dockDoors": 36,
+      "power": "2400a/480v",
+      "owner": "ML Realty Partners LLC"
     },
+    {
+      "id": "alt3",
+      "tier": "alt",
+      "name": "1237 W Division",
+      "address": "1237 W Division",
+      "city": "Chicago",
+      "submarket": "North Chicago",
+      "coords": [
+        41.90187,
+        -87.658
+      ],
+      "sizeSF": 1184800,
+      "availSF": 1184800,
+      "clearHeight": "36'",
+      "dockDoors": 70,
+      "power": "10000a/480v",
+      "owner": "Logistics Property Company, LLC"
+    },
+    {
+      "id": "alt4",
+      "tier": "alt",
+      "name": "Elk Trail Center",
+      "address": "135-195 E Elk Trl",
+      "city": "Carol Stream",
+      "submarket": "North DuPage",
+      "coords": [
+        41.92502,
+        -88.11696
+      ],
+      "sizeSF": 334718,
+      "availSF": 334718,
+      "clearHeight": "31'",
+      "dockDoors": 59,
+      "power": "2400a/480v 3p",
+      "owner": "Prologis, Inc."
+    },
+    {
+      "id": "alt5",
+      "tier": "alt",
+      "name": "Bridge Point Franklin Park- Building Three",
+      "address": "10701 Franklin Ave",
+      "city": "Franklin Park",
+      "submarket": "West Cook North",
+      "coords": [
+        41.93846,
+        -87.89292
+      ],
+      "sizeSF": 287417,
+      "availSF": 69616,
+      "clearHeight": "32'",
+      "dockDoors": 47,
+      "power": "3000a/277-480v",
+      "owner": "Morgan Stanley & Co. LLC"
+    },
+    {
+      "id": "alt6",
+      "tier": "alt",
+      "name": "284-314 E Lies Rd",
+      "address": "284-314 E Lies Rd",
+      "city": "Carol Stream",
+      "submarket": "North DuPage",
+      "coords": [
+        41.93006,
+        -88.11334
+      ],
+      "sizeSF": 299080,
+      "availSF": 299080,
+      "clearHeight": "30'",
+      "dockDoors": 22,
+      "power": "3000a/480v",
+      "owner": "STRS Ohio CA Real Estate"
+    },
+    {
+      "id": "alt7",
+      "tier": "alt",
+      "name": "American Hotel Register Company",
+      "address": "210 S Milwaukee Ave",
+      "city": "Vernon Hills",
+      "submarket": "South Lake County",
+      "coords": [
+        42.2227,
+        -87.94331
+      ],
+      "sizeSF": 203831,
+      "availSF": 203831,
+      "clearHeight": "34'",
+      "dockDoors": 22,
+      "power": "3000a",
+      "owner": "Wylie Capital"
+    },
+    {
+      "id": "alt8",
+      "tier": "alt",
+      "name": "1 E North Ave",
+      "address": "1 E North Ave",
+      "city": "Glendale Heights",
+      "submarket": "North DuPage",
+      "coords": [
+        41.90165,
+        -88.0925
+      ],
+      "sizeSF": 150750,
+      "availSF": 112901,
+      "clearHeight": "32'",
+      "dockDoors": 16,
+      "power": "2000a/277-480v 3p",
+      "owner": "Ares Management Corporation"
+    },
+    {
+      "id": "alt9",
+      "tier": "alt",
+      "name": "990 E North Ave",
+      "address": "990 E North Ave",
+      "city": "Glendale Heights",
+      "submarket": "North DuPage",
+      "coords": [
+        41.90495,
+        -88.0454
+      ],
+      "sizeSF": 183296,
+      "availSF": 183296,
+      "clearHeight": "32'",
+      "dockDoors": 18,
+      "power": "2000a/480v 3p",
+      "owner": "Prologis, Inc."
+    },
+    {
+      "id": "alt10",
+      "tier": "alt",
+      "name": "4700-4800 Proviso Dr",
+      "address": "4700-4800 Proviso Dr",
+      "city": "Melrose Park",
+      "submarket": "West Cook North",
+      "coords": [
+        41.89268,
+        -87.88776
+      ],
+      "sizeSF": 624672,
+      "availSF": 624672,
+      "clearHeight": "35'",
+      "dockDoors": 121,
+      "power": "5600a",
+      "owner": "Hines"
+    },
+    {
+      "id": "alt12",
+      "tier": "alt",
+      "name": "1850 N US 45",
+      "address": "1850 N US 45",
+      "city": "Libertyville",
+      "submarket": "South Lake County",
+      "coords": [
+        42.30762,
+        -88.00201
+      ],
+      "sizeSF": 168789,
+      "availSF": 168789,
+      "clearHeight": "32'",
+      "dockDoors": 24,
+      "power": "4000a",
+      "owner": null
+    },
+    {
+      "id": "alt14",
+      "tier": "alt",
+      "name": "Building 2",
+      "address": "1055 W Devon Ave",
+      "city": "Itasca",
+      "submarket": "O'Hare",
+      "coords": [
+        41.99109,
+        -88.02775
+      ],
+      "sizeSF": 247176,
+      "availSF": 79525,
+      "clearHeight": "32'",
+      "dockDoors": 22,
+      "power": "3000a/480v 3p",
+      "owner": "Banner Oak Capital Partners, LP"
+    },
+    {
+      "id": "alt15",
+      "tier": "alt",
+      "name": "Northwest O'Hare Gateway Center- Building #2",
+      "address": "3600 N Kennicott Ave",
+      "city": "Arlington Heights",
+      "submarket": "Northwest Cook",
+      "coords": [
+        42.14139,
+        -87.99842
+      ],
+      "sizeSF": 306360,
+      "availSF": 306360,
+      "clearHeight": "36'",
+      "dockDoors": 51,
+      "power": "2000a/277-480v 3p",
+      "owner": null
+    },
+    {
+      "id": "alt16",
+      "tier": "alt",
+      "name": "9300 King Street",
+      "address": "9300 King St",
+      "city": "Franklin Park",
+      "submarket": "West Cook North",
+      "coords": [
+        41.94122,
+        -87.85871
+      ],
+      "sizeSF": 99076,
+      "availSF": 99076,
+      "clearHeight": "32'",
+      "dockDoors": 12,
+      "power": "2000a/480v 3p",
+      "owner": "Brookfield Property Group"
+    },
+    {
+      "id": "alt17",
+      "tier": "alt",
+      "name": "Carol Point Bus Ctr IV",
+      "address": "343 E Lies Rd",
+      "city": "Carol Stream",
+      "submarket": "North DuPage",
+      "coords": [
+        41.93067,
+        -88.10817
+      ],
+      "sizeSF": 274714,
+      "availSF": 143524,
+      "clearHeight": "30'",
+      "dockDoors": 34,
+      "power": "2600-3000a/277-480v 3p",
+      "owner": "DWS Group"
+    },
+    {
+      "id": "alt18",
+      "tier": "alt",
+      "name": "LogistiCenter at 94 - Facility #2",
+      "address": "901-939 E Park Ave",
+      "city": "Libertyville",
+      "submarket": "South Lake County",
+      "coords": [
+        42.27987,
+        -87.93938
+      ],
+      "sizeSF": 220542,
+      "availSF": 115412,
+      "clearHeight": "32'",
+      "dockDoors": 49,
+      "power": "2500a/277-480v 3p 4w",
+      "owner": "High Street Logistics Properties"
+    },
+    {
+      "id": "alt19",
+      "tier": "alt",
+      "name": "O'Hare Business Center East",
+      "address": "3708 River Rd",
+      "city": "Franklin Park",
+      "submarket": "West Cook North",
+      "coords": [
+        41.94467,
+        -87.861
+      ],
+      "sizeSF": 325045,
+      "availSF": 97914,
+      "clearHeight": "30'",
+      "dockDoors": 37,
+      "power": "600-2000a/480v 3p",
+      "owner": "AEW Capital Management"
+    },
+    {
+      "id": "alt20",
+      "tier": "alt",
+      "name": "1600 Sherwin Ave",
+      "address": "1600 Sherwin Ave",
+      "city": "Des Plaines",
+      "submarket": "O'Hare",
+      "coords": [
+        42.01301,
+        -87.88312
+      ],
+      "sizeSF": 164125,
+      "availSF": 164125,
+      "clearHeight": "32'",
+      "dockDoors": 35,
+      "power": "2000a/277-480v 3p 4w",
+      "owner": "ARES Management LLC"
+    }
   ],
-
-  /* ---- Logistics reference nodes (fixed geography, not client data) ---- */
-  nodes: [
-    { id: "ord", name: "O'Hare Int'l (ORD)", type: "airport",   coords: [41.978, -87.904] },
-    { id: "mdw", name: "Midway (MDW)",        type: "airport",   coords: [41.786, -87.752] },
-    { id: "loop", name: "Chicago Loop",       type: "downtown",  coords: [41.878, -87.629] },
-    { id: "bnsf", name: "BNSF Logistics Park", type: "intermodal", coords: [41.383, -88.121] },
-    { id: "up",   name: "UP Global IV",        type: "intermodal", coords: [41.515, -88.199] },
-    { id: "mke",  name: "Milwaukee",           type: "downtown",  coords: [43.038, -87.906] },
+  "nodes": [
+    {
+      "id": "ord",
+      "name": "O’Hare Int’l (ORD)",
+      "type": "airport",
+      "coords": [
+        41.9786,
+        -87.9048
+      ]
+    },
+    {
+      "id": "loop",
+      "name": "Chicago Loop",
+      "type": "downtown",
+      "coords": [
+        41.8781,
+        -87.6298
+      ]
+    },
+    {
+      "id": "mdw",
+      "name": "Midway (MDW)",
+      "type": "airport",
+      "coords": [
+        41.786,
+        -87.752
+      ]
+    },
+    {
+      "id": "mke",
+      "name": "Milwaukee",
+      "type": "downtown",
+      "coords": [
+        43.0389,
+        -87.9065
+      ]
+    }
   ],
-
-  /* ---- Key lease terms (target structure) ---- */
-  leaseTerms: {
-    summary: "SAMPLE — target lease structure across the finalists.",
-    terms: [
-      { label: "Structure", value: "Triple-net (NNN)" },
-      { label: "Term", value: "15 years" },
-      { label: "Escalations", value: "3.0% annual" },
-      { label: "Free rent", value: "6–9 months (construction/fit-out)" },
-      { label: "TI allowance", value: "$25–45 /SF (refrigeration)" },
-      { label: "Renewal options", value: "Two 5-year options at FMV" },
-      { label: "Expansion right", value: "ROFO on adjacent pad" },
-    ],
+  "tcoAssumptions": {
+    "termYears": 5,
+    "note": ""
   },
-
-  /* ---- Deliverable timeline (milestones) ---- */
-  timeline: [
-    { phase: "Today", label: "Needs alignment + site tour package", date: "Jul 2026", status: "done" },
-    { phase: "30 days", label: "LOIs issued to finalists", date: "Aug 2026", status: "active" },
-    { phase: "60 days", label: "Incentive negotiations + power studies", date: "Sep 2026", status: "next" },
-    { phase: "90 days", label: "Lease execution / BTS commitment", date: "Oct 2026", status: "next" },
-    { phase: "12–18 mo", label: "Fit-out + occupancy", date: "2027", status: "next" },
-  ],
-
-  /* ---- TCO model assumptions (global) ---- */
-  tcoAssumptions: {
-    termYears: 5,
-    note: "SAMPLE — 5-year total cost of occupancy. Adjust term/SF/headcount to match the client's model.",
-  },
-
-  /* ---- Next steps ---- */
-  nextSteps: [
-    "SAMPLE — Confirm the client's weighting of power vs. labor vs. cost (captured via the survey).",
-    "Schedule site tours for the two leading finalists.",
-    "Open incentive conversations with Will County and WEDC.",
-    "Commission a power-availability study at the freezer-ready shells.",
-  ],
-
-  /* ---- Take-home survey questions ---- */
-  survey: {
-    intro: "Two minutes to sharpen the search. Tell us what matters most for this facility.",
-    questions: [
-      { id: "role", type: "text", label: "Your name & role", required: true, placeholder: "e.g. VP Supply Chain" },
-      { id: "priority", type: "rank", label: "Rank what matters most for this site",
-        options: ["Power & utilities", "Labor availability", "Logistics access", "Occupancy cost", "Incentives", "Speed to occupancy"] },
-      { id: "temp", type: "choice", label: "Primary temperature profile",
-        options: ["Mostly freezer", "Mostly cooler", "Balanced freezer/cooler", "Not sure yet"] },
-      { id: "timeline", type: "choice", label: "How urgent is occupancy?",
-        options: ["ASAP (<12 mo)", "12–18 months", "18–24 months", "Flexible"] },
-      { id: "favorite", type: "site", label: "Which site feels right so far?" }, // options built from sites at runtime
-      { id: "notes", type: "textarea", label: "Anything else we should weigh?", placeholder: "Deal-breakers, must-haves, questions…" },
-    ],
-  },
+  "survey": {
+    "intro": "Two minutes to sharpen the search. Tell us what matters most for this facility.",
+    "questions": [
+      {
+        "id": "role",
+        "type": "text",
+        "label": "Your name & role",
+        "required": true,
+        "placeholder": "e.g. VP Supply Chain"
+      },
+      {
+        "id": "priority",
+        "type": "rank",
+        "label": "Rank what matters most",
+        "options": [
+          "Cold-storage readiness",
+          "Labor availability",
+          "Proximity to O’Hare",
+          "Occupancy cost",
+          "Speed to occupancy",
+          "Power capacity"
+        ]
+      },
+      {
+        "id": "temp",
+        "type": "choice",
+        "label": "Primary temperature profile",
+        "options": [
+          "Mostly freezer",
+          "Mostly cooler",
+          "Balanced",
+          "Not sure yet"
+        ]
+      },
+      {
+        "id": "timeline",
+        "type": "choice",
+        "label": "How urgent is occupancy?",
+        "options": [
+          "ASAP (<12 mo)",
+          "12–18 months",
+          "Flexible"
+        ]
+      },
+      {
+        "id": "favorite",
+        "type": "site",
+        "label": "Which site feels right so far?"
+      },
+      {
+        "id": "notes",
+        "type": "textarea",
+        "label": "Anything else we should weigh?",
+        "placeholder": "Deal-breakers, must-haves, questions…"
+      }
+    ]
+  }
 };

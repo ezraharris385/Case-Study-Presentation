@@ -66,6 +66,7 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 }
 .layers__title { margin-bottom: 8px; }
 .layers__row { display: flex; align-items: center; gap: 9px; padding: 4px 0; font-size: 0.86rem; color: var(--ink-2); cursor: pointer; }
+.layers__row[hidden] { display: none; }
 .layers__row input { accent-color: var(--accent); width: 15px; height: 15px; }
 
 /* Legend */
@@ -123,6 +124,14 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .score-track { display: block; height: 8px; border-radius: 100px; background: var(--surface-3); overflow: hidden; }
 .score-fill { display: block; height: 100%; border-radius: 100px; background: var(--accent); }
 .score-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
+/* Criteria checklist */
+.chk { list-style: none; margin: 0; padding: 0; }
+.chk li { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.88rem; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.chk li:last-child { border-bottom: none; }
+.chk__ico { width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.72rem; font-weight: 700; flex: 0 0 auto; }
+.chk--met > .chk__ico, .chk__ico.chk--met { background: var(--good-soft); color: var(--good); }
+.chk--confirm > .chk__ico, .chk__ico.chk--confirm { background: var(--warn-soft); color: var(--warn); }
 
 .prosCons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .prosCons ul { margin: 6px 0 0; padding-left: 16px; font-size: 0.85rem; color: var(--ink-2); }

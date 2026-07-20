@@ -19,7 +19,9 @@
 
   $("#clientName").textContent = CFG.clientName;
   function refreshBanner() {
-    var b = $("#sampleBanner"); b.hidden = false;
+    var b = $("#sampleBanner");
+    if (!userLoaded && D.sampleData === false) { b.hidden = true; return; }
+    b.hidden = false;
     if (userLoaded) { b.innerHTML = SHARED ? "<strong>Preview — this screen only</strong> (not shared; refresh to reset)." : "<strong>Your data</strong> — loaded on this device."; b.style.background = "var(--good-soft)"; }
     else if (autoloaded) { b.innerHTML = "<strong>Demo data (Chicago)</strong> — tap ＋ to load yours."; b.style.background = "var(--accent-soft)"; }
     else { b.innerHTML = "<strong>Sample data</strong> — tap ＋ to load yours."; b.style.background = "var(--warn-soft)"; }
@@ -97,21 +99,22 @@
   function closeSheet() { sheet.hidden = true; scrim.hidden = true; }
   scrim.addEventListener("click", closeSheet); $("#sheetGrab").addEventListener("click", closeSheet);
 
-  function scoreBars(scores) { return D.criteria.map(function (c) { var v = (scores && scores[c.key] != null) ? scores[c.key] : null; return v == null ? "" : '<div class="score-row"><span>' + esc(c.label) + '</span><span class="score-track"><span class="score-fill" style="width:' + v + '%"></span></span><span class="score-val num">' + v + "</span></div>"; }).join(""); }
+  function renderChecklist(list) { if (!list || !list.length) return ""; return '<ul class="chk">' + list.map(function (c) { return '<li class="chk--' + c.status + '"><span class="chk__ico">' + (c.status === "met" ? "✓" : "?") + "</span>" + esc(c.label) + "</li>"; }).join("") + "</ul>"; }
+  function demoMini(s) { var d = s.demo; if (!d) return ""; return '<div class="d-section"><h4>10-mile demographics</h4><dl class="kv">' + kv("Population", fmt(d.pop10mi)) + kv("Median HH income", d.medHHinc ? "$" + fmt(d.medHHinc) : "—") + kv("Labor force", fmt(d.laborForce)) + kv("Unemployment", d.unemploymentPct != null ? d.unemploymentPct + "%" : "—") + kv("Transp/whse jobs", fmt(d.twEmployment)) + kv("Bachelor’s+", d.bachelorsPlusPct != null ? d.bachelorsPlusPct + "%" : "—") + "</dl></div>"; }
   function kv(k, v) { return "<dt>" + esc(k) + "</dt><dd>" + esc(v == null ? "—" : v) + "</dd>"; }
 
   function openSite(s) {
     var drive = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join("");
-    var inc = (s.incentives || []).map(function (x) { return '<span class="pill pill--accent">' + esc(x) + "</span>"; }).join(" ");
-    openSheet('<h2>' + esc(clean(s.name)) + "</h2><div class=\"d-sub\">" + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
-      (s.criteriaScore != null ? '<div class="score-head"><span class="score-big num">' + s.criteriaScore + '</span><span class="eyebrow">score / 100</span></div>' : "") + scoreBars(s.scores) +
-      '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' + kv("Status", s.status) + kv("Size", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Power", s.power) + kv("Cold-ready", s.coldReady) + kv("Rent (NNN)", s.rentNNN != null ? "$" + Number(s.rentNNN).toFixed(2) + " /SF" : "—") + kv("Expansion", s.expansion) + "</dl></div>" +
+    openSheet('<h2>' + esc(clean(s.name)) + "</h2><div class=\"d-sub\">" + esc(s.address || "") + " · " + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
+      (s.criteriaMet != null ? '<div class="score-head"><span class="score-big num">' + s.criteriaMet + '</span><span class="eyebrow">of ' + s.criteriaTotal + " criteria confirmed</span></div>" : "") +
+      (s.rent ? '<div class="d-section"><h4>Occupancy cost (NNN)</h4><dl class="kv">' + kv("Base rent", s.rent.base != null ? "$" + s.rent.base.toFixed(2) : "—") + kv("Opex + taxes", s.rent.addl != null ? "$" + s.rent.addl.toFixed(2) : "—") + "<dt><strong>All-in</strong></dt><dd><strong>$" + (s.rent.allIn != null ? s.rent.allIn.toFixed(2) : "—") + " /SF</strong></dd></dl></div>" : "") +
+      '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' + kv("Status", s.status) + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Drive-in", s.driveIns) + kv("Power", s.power) + kv("Year built", s.yearBuilt) + "</dl></div>" +
+      '<div class="d-section"><h4>Client criteria</h4>' + renderChecklist(s.checklist) + "</div>" +
       (drive ? '<div class="d-section"><h4>Drive distances</h4><table class="table"><tbody>' + drive + "</tbody></table></div>" : "") +
-      (s.labor ? '<div class="d-section"><h4>Labor shed</h4><dl class="kv">' + kv("Pop 10mi", s.labor.pop10mi ? fmt(s.labor.pop10mi) : "—") + kv("Workforce", s.labor.workforce ? fmt(s.labor.workforce) : "—") + kv("Avg wage", s.labor.avgWage) + "</dl></div>" : "") +
-      (inc ? '<div class="d-section"><h4>Incentives</h4><div class="chips">' + inc + "</div></div>" : ""));
-    if (s.coords) map.setView(s.coords, 10, { animate: true });
+      demoMini(s));
+    if (s.coords) map.setView(s.coords, 11, { animate: true });
   }
-  function openAlt(s) { openSheet('<h2>' + esc(clean(s.name)) + '</h2><div class="d-sub">' + esc(s.city) + " · also-considered</div><dl class=\"kv\">" + kv("Size", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Rent (NNN)", s.rentNNN != null ? "$" + Number(s.rentNNN).toFixed(2) : "—") + "</dl>" + (s.whyOut ? '<div class="d-section"><h4>Why it didn\'t make the cut</h4><p>' + esc(s.whyOut) + "</p></div>" : "")); if (s.coords) map.setView(s.coords, 9, { animate: true }); }
+  function openAlt(s) { openSheet('<h2>' + esc(clean(s.name)) + '</h2><div class="d-sub">' + esc(s.address || "") + (s.city ? " · " + esc(s.city) : "") + " · also-considered</div><dl class=\"kv\">" + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Power", s.power) + "</dl><p class=\"form-note\" style=\"margin-top:10px\">Screened; not shortlisted to the final three.</p>"); if (s.coords) map.setView(s.coords, 11, { animate: true }); }
 
   /* Tabs */
   function activate(tab) {
@@ -124,24 +127,31 @@
   /* Sites list */
   function renderSitesList() {
     $("#sitesList").innerHTML = '<div class="sec-title">Finalist sites</div>' + (D.sites || []).map(function (s, i) {
-      return '<button class="mcard" data-site="' + i + '"><div class="mcard__top"><span class="mcard__name">' + (i + 1) + ". " + esc(clean(s.name)) + '</span>' + (s.criteriaScore != null ? '<span class="mcard__score num">' + s.criteriaScore + "</span>" : "") + '</div><div class="mcard__sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + '</div><div class="mcard__row">' + (s.rentNNN != null ? '<span class="pill">$' + Number(s.rentNNN).toFixed(2) + " NNN</span>" : "") + (s.sizeSF ? '<span class="pill">' + (s.sizeSF / 1000).toFixed(0) + "k SF</span>" : "") + "</div></button>";
+      return '<button class="mcard" data-site="' + i + '"><div class="mcard__top"><span class="mcard__name">' + (i + 1) + ". " + esc(clean(s.name)) + '</span>' + (s.criteriaMet != null ? '<span class="mcard__score num" style="font-size:1.2rem">' + s.criteriaMet + "/" + s.criteriaTotal + "</span>" : "") + '</div><div class="mcard__sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + '</div><div class="mcard__row">' + (s.rent && s.rent.allIn != null ? '<span class="pill">$' + s.rent.allIn.toFixed(2) + " NNN</span>" : "") + (s.sizeSF ? '<span class="pill">' + (s.sizeSF / 1000).toFixed(0) + "k SF</span>" : "") + "</div></button>";
     }).join("") + ((D.alsoConsidered && D.alsoConsidered.length) ? ('<div class="sec-title" style="margin-top:18px">Also considered</div>' + D.alsoConsidered.map(function (s, i) { return '<button class="mcard" data-alt="' + i + '"><div class="mcard__top"><span class="mcard__name">' + esc(clean(s.name)) + '</span><span class="pill pill--alt">not selected</span></div><div class="mcard__sub">' + esc(s.city) + "</div></button>"; }).join("")) : "");
   }
   $("#sitesList").addEventListener("click", function (e) { var s = e.target.closest("[data-site]"), a = e.target.closest("[data-alt]"); if (s) openSite(D.sites[+s.dataset.site]); else if (a) openAlt(D.alsoConsidered[+a.dataset.alt]); });
 
   /* Info accordion */
   function infoSections() {
+    var sites = D.sites || [];
+    var legend = function () { return '<p class="form-note">' + sites.map(function (s, i) { return (i + 1) + " = " + esc(s.city); }).join(" · ") + "</p>"; };
     return [
-      { t: "Client needs", h: function () { var r = (D.needs.requirements || []).map(function (x) { return "<tr><td>" + esc(x.label) + "</td><td>" + esc(x.value) + "</td></tr>"; }).join(""); var db = (D.needs.dealBreakers || []).map(function (x) { return '<span class="pill pill--warn">' + esc(x) + "</span>"; }).join(" "); return (D.needs.summary && !/^SAMPLE/.test(D.needs.summary) ? "<p>" + esc(D.needs.summary) + "</p>" : "") + '<table class="table"><tbody>' + r + '</tbody></table>' + (db ? '<div style="margin-top:10px" class="chips">' + db + "</div>" : ""); } },
-      { t: "SWOT", h: function () { function cell(cls, title, arr) { return '<div class="quad__cell ' + cls + '"><h5>' + title + "</h5><ul>" + (arr || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>"; } return '<div class="quad">' + cell("quad--s", "Strengths", D.swot.strengths) + cell("quad--w", "Weaknesses", D.swot.weaknesses) + cell("quad--o", "Opportunities", D.swot.opportunities) + cell("quad--t", "Threats", D.swot.threats) + "</div>"; } },
-      { t: "Chicago market", h: function () { return '<table class="table"><tbody>' + D.market.stats.map(function (s) { return "<tr><td>" + esc(s.label) + '</td><td class="num">' + esc(s.value) + "</td></tr>"; }).join("") + "</tbody></table><p style=\"margin-top:10px\">" + esc(D.market.note) + "</p>"; } },
-      { t: "Demographics", h: function () { if (!(D.demographics && D.demographics.points)) return '<p class="form-note">Load a demographics file to populate this + the map layer.</p>'; var m = D.demographics.metric; var rows = D.demographics.points.slice().sort(function (a, b) { return (b.metrics[m] || 0) - (a.metrics[m] || 0); }).slice(0, 12).map(function (p) { return "<tr><td>" + esc(p.name) + '</td><td class="num">' + fmt(p.metrics[m]) + "</td></tr>"; }).join(""); return '<table class="table"><thead><tr><th>Area</th><th class="num">' + esc(m) + '</th></tr></thead><tbody>' + rows + "</tbody></table>"; } },
-      { t: "Drive distances", h: function () { return (D.sites || []).map(function (s, i) { var rows = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join(""); return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(clean(s.name)) + '</h5>' + (rows ? '<table class="table"><tbody>' + rows + "</tbody></table>" : '<p class="form-note">No drive data.</p>'); }).join(""); } },
-      { t: "Labor forces", h: function () { var rows = (D.sites || []).map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + '</td><td class="num">' + (l.pop10mi ? fmt(l.pop10mi) : "—") + '</td><td class="num">' + esc(l.avgWage || "—") + "</td></tr>"; }).join(""); return '<table class="table"><thead><tr><th>Site</th><th class="num">Pop 10mi</th><th class="num">Wage</th></tr></thead><tbody>' + rows + "</tbody></table>"; } },
-      { t: "Key lease terms", h: function () { return '<table class="table"><tbody>' + D.leaseTerms.terms.map(function (t) { return "<tr><td>" + esc(t.label) + "</td><td>" + esc(t.value) + "</td></tr>"; }).join("") + "</tbody></table>"; } },
-      { t: "Incentives & TCO", h: function () { var yrs = D.tcoAssumptions.termYears; var withT = (D.sites || []).filter(function (s) { return s.tco; }); if (!withT.length) return '<p class="form-note">No TCO inputs in the current data.</p>'; var rows = withT.map(function (s) { var t = s.tco, sf = s.sizeSF || 0; var gross = ((t.rentPerSF || 0) + (t.opexPerSF || 0) + (t.powerPerSF || 0)) * sf * yrs + (t.laborAnnual || 0) * yrs + (t.tiPerSF || 0) * sf; return "<tr><td>" + esc(clean(s.name)) + '</td><td class="num">' + moneyM(gross - (t.incentivesTotal || 0)) + "</td></tr>"; }).join(""); return '<table class="table"><thead><tr><th>Site</th><th class="num">Net ' + yrs + "-yr TCO</th></tr></thead><tbody>" + rows + "</tbody></table>"; } },
-      { t: "Timeline", h: function () { return '<ul class="list-clean">' + D.timeline.map(function (t) { return "<li><strong>" + esc(t.phase) + ":</strong> " + esc(t.label) + ' <span style="color:var(--ink-muted)">(' + esc(t.date) + ")</span></li>"; }).join("") + "</ul>"; } },
-      { t: "Next steps", h: function () { return '<ul class="list-clean">' + D.nextSteps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; } },
+      { t: "Client needs", h: function () { var r = (D.needs.requirements || []).map(function (x) { return "<tr><td>" + esc(x.label) + "</td><td>" + esc(x.value) + "</td></tr>"; }).join(""); return '<table class="table"><tbody>' + r + "</tbody></table>"; } },
+      { t: "Site criteria", h: function () {
+        var rows = D.criteria.map(function (c, ci) { var cells = sites.map(function (s) { var st = (s.checklist && s.checklist[ci]) ? s.checklist[ci].status : null; return '<td class="num">' + (st === "met" ? '<span class="chk__ico chk--met">✓</span>' : st === "confirm" ? '<span class="chk__ico chk--confirm">?</span>' : "—") + "</td>"; }).join(""); return "<tr><td>" + esc(c.label) + "</td>" + cells + "</tr>"; }).join("");
+        var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + "</th>"; }).join("");
+        return '<table class="table"><thead><tr><th>Criterion</th>' + heads + "</tr></thead><tbody>" + rows + "</tbody></table>" + legend();
+      } },
+      { t: "Demographics (10-mi)", h: function () {
+        if (!sites.length || !sites[0].demo) return '<p class="form-note">No demographics.</p>';
+        var metrics = [["Population", "pop10mi", fmt], ["Median HH inc", "medHHinc", function (v) { return "$" + fmt(v); }], ["Labor force", "laborForce", fmt], ["Unemployment", "unemploymentPct", function (v) { return v + "%"; }], ["Transp/whse jobs", "twEmployment", fmt], ["Bachelor’s+", "bachelorsPlusPct", function (v) { return v + "%"; }]];
+        var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + "</th>"; }).join("");
+        var rows = metrics.map(function (m) { var cells = sites.map(function (s) { return '<td class="num">' + (s.demo[m[1]] != null ? m[2](s.demo[m[1]]) : "—") + "</td>"; }).join(""); return "<tr><td>" + m[0] + "</td>" + cells + "</tr>"; }).join("");
+        return '<table class="table"><thead><tr><th>Metric</th>' + heads + "</tr></thead><tbody>" + rows + "</tbody></table>" + legend();
+      } },
+      { t: "Drive distances", h: function () { return sites.map(function (s, i) { var rows = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join(""); return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(clean(s.name)) + "</h5>" + (rows ? '<table class="table"><tbody>' + rows + "</tbody></table>" : ""); }).join(""); } },
+      { t: "Labor forces", h: function () { var rows = sites.map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + '</td><td class="num">' + (l.workforce ? fmt(l.workforce) : "—") + '</td><td class="num">' + (l.twEmployment ? fmt(l.twEmployment) : "—") + '</td><td class="num">' + esc(l.unemployment || "—") + "</td></tr>"; }).join(""); return '<table class="table"><thead><tr><th>Site</th><th class="num">Labor force</th><th class="num">T&amp;W jobs</th><th class="num">Unemp</th></tr></thead><tbody>' + rows + "</tbody></table>"; } },
     ];
   }
   function renderInfo() {
