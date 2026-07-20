@@ -10,8 +10,9 @@
   var clean = function (s) { return String(s || "").replace(/^SAMPLE — /, ""); };
   var fmt = function (n) { return typeof n === "number" ? n.toLocaleString() : n; };
 
-  var patch = LDR.loadPatch(STORAGE_KEY) || {};
-  var userLoaded = !!(patch && Object.keys(patch).length);
+  var SHARED = !!CFG.sharedDataOnly;
+  var patch = SHARED ? {} : (LDR.loadPatch(STORAGE_KEY) || {});
+  var userLoaded = !SHARED && !!(patch && Object.keys(patch).length);
   var autoloaded = false;
   var basePatch = null;
   var D = LDR.apply(BASE, patch);
@@ -19,7 +20,7 @@
   $("#clientName").textContent = CFG.clientName;
   function refreshBanner() {
     var b = $("#sampleBanner"); b.hidden = false;
-    if (userLoaded) { b.innerHTML = "<strong>Your data</strong> — loaded on this device."; b.style.background = "var(--good-soft)"; }
+    if (userLoaded) { b.innerHTML = SHARED ? "<strong>Preview — this screen only</strong> (not shared; refresh to reset)." : "<strong>Your data</strong> — loaded on this device."; b.style.background = "var(--good-soft)"; }
     else if (autoloaded) { b.innerHTML = "<strong>Demo data (Chicago)</strong> — tap ＋ to load yours."; b.style.background = "var(--accent-soft)"; }
     else { b.innerHTML = "<strong>Sample data</strong> — tap ＋ to load yours."; b.style.background = "var(--warn-soft)"; }
   }
@@ -207,7 +208,7 @@
     var good = fileItems.filter(function (it) { return !it.error; });
     var newPatch = LDR.buildPatch(good);
     patch = LDR.mergePatches(patch && Object.keys(patch).length ? patch : (autoloaded ? basePatch : {}), newPatch);
-    LDR.savePatch(STORAGE_KEY, patch); userLoaded = true; D = LDR.apply(BASE, patch);
+    if (!SHARED) LDR.savePatch(STORAGE_KEY, patch); userLoaded = true; D = LDR.apply(BASE, patch);
     fileItems = []; renderFileList();
     $("#loaderMsg").className = "loader-msg loader-msg--ok"; $("#loaderMsg").textContent = "Loaded: " + LDR.summarize(patch);
     didFit = false; renderAll({ fit: true });

@@ -11,8 +11,9 @@
   var fmt = function (n) { return typeof n === "number" ? n.toLocaleString() : n; };
 
   // ---- data state ----
-  var patch = LDR.loadPatch(STORAGE_KEY) || {};   // user patch (persisted) or {}
-  var userLoaded = !!(patch && Object.keys(patch).length);
+  var SHARED = !!CFG.sharedDataOnly;              // shared-data mode: everyone sees /data, no per-device state
+  var patch = SHARED ? {} : (LDR.loadPatch(STORAGE_KEY) || {});
+  var userLoaded = !SHARED && !!(patch && Object.keys(patch).length);
   var autoloaded = false;
   var D = LDR.apply(BASE, patch);
   var currentView = "map";
@@ -25,7 +26,7 @@
   document.title = CFG.clientName + " — Site Cockpit";
   function refreshBanner() {
     var b = $("#sampleBanner"); b.hidden = false;
-    if (userLoaded) { b.innerHTML = '<strong>Your data.</strong> Loaded on this device — reset any time from “Load data”.'; b.style.background = "var(--good-soft)"; }
+    if (userLoaded) { b.innerHTML = SHARED ? '<strong>Preview — this screen only.</strong> Not shared or saved; refresh to return to the shared data.' : '<strong>Your data.</strong> Loaded on this device — reset any time from “Load data”.'; b.style.background = "var(--good-soft)"; }
     else if (autoloaded) { b.innerHTML = '<strong>Demo data (greater Chicago).</strong> Loaded from <code>/data</code> — click “Load data” to drop in your own.'; b.style.background = "var(--accent-soft)"; }
     else { b.innerHTML = '<strong>Sample data.</strong> Placeholder figures — click “Load data” to add yours.'; b.style.background = "var(--warn-soft)"; }
   }
@@ -354,7 +355,7 @@
     var good = fileItems.filter(function (it) { return !it.error; });
     var newPatch = LDR.buildPatch(good);
     patch = LDR.mergePatches(patch && Object.keys(patch).length ? patch : (autoloaded ? basePatch : {}), newPatch);
-    LDR.savePatch(STORAGE_KEY, patch);
+    if (!SHARED) LDR.savePatch(STORAGE_KEY, patch);
     userLoaded = true;
     D = LDR.apply(BASE, patch);
     fileItems = []; renderFileList();

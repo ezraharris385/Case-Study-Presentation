@@ -33,9 +33,16 @@ window.CASE_CONFIG = {
   },
 
   // ---- Auto-load data files from the /data folder on startup ----
-  // If present, these load as the default dataset (a user upload overrides them,
-  // and is remembered per-device). Paths are relative to each build folder.
+  // These load as the shared dataset EVERYONE sees. Paths are relative to each build folder.
   dataAutoload: ["../data/sites.csv", "../data/demographics.csv", "../data/requirements.csv"],
+
+  // ---- Shared-data mode ----
+  // true  = the committed /data is the single source of truth. Every visitor sees exactly
+  //         the same thing, every time. In-app uploads are a THIS-SCREEN-ONLY preview that
+  //         never persists and never affects anyone else. (Recommended for a live demo.)
+  // false = in-app uploads save to that person's browser and override /data for them.
+  // To change what everyone sees, replace the files in /data and commit them.
+  sharedDataOnly: true,
 
   // The public URL of the PHONE build (used to render the QR code on the desktop build).
   // Fill in after you enable GitHub Pages, e.g.
