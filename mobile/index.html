@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <title>Cold-Chain Site Cockpit</title>
+  <meta name="description" content="Explore the cold-storage site search on your phone." />
+  <meta name="theme-color" content="#0E8C9E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../shared/vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="../shared/theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="mhead">
+    <div class="mhead__brand">
+      <span class="mhead__mark" aria-hidden="true"></span>
+      <span class="mhead__client" id="clientName">Client</span>
+    </div>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">◐</button>
+  </header>
+
+  <div class="sample-banner" id="sampleBanner" hidden><strong>Sample data</strong> — placeholders for the demo.</div>
+
+  <main class="mstage">
+    <!-- MAP tab -->
+    <section class="tabview is-active" id="tab-map">
+      <div id="map" class="map"></div>
+      <div class="mlayers" id="mlayers">
+        <button class="chip-toggle is-on" data-layer="rings">10-mi reach</button>
+        <button class="chip-toggle is-on" data-layer="nodes">Nodes</button>
+        <button class="chip-toggle" data-layer="labor">Labor shed</button>
+        <button class="chip-toggle" data-layer="alt">Also-considered</button>
+      </div>
+    </section>
+
+    <!-- SITES tab -->
+    <section class="tabview" id="tab-sites">
+      <div class="scroller" id="sitesList"></div>
+    </section>
+
+    <!-- SURVEY tab -->
+    <section class="tabview" id="tab-survey">
+      <div class="scroller" id="surveyMount"></div>
+    </section>
+
+    <!-- INFO tab -->
+    <section class="tabview" id="tab-info">
+      <div class="scroller" id="infoMount"></div>
+    </section>
+  </main>
+
+  <!-- Bottom sheet for site detail -->
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet__grab" id="sheetGrab"><span></span></div>
+    <div class="sheet__body" id="sheetBody"></div>
+  </div>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- Bottom tab bar -->
+  <nav class="tabbar">
+    <button class="tab is-active" data-tab="map"><span class="tab__ico">◎</span>Map</button>
+    <button class="tab" data-tab="sites"><span class="tab__ico">▣</span>Sites</button>
+    <button class="tab" data-tab="survey"><span class="tab__ico">✎</span>Survey</button>
+    <button class="tab" data-tab="info"><span class="tab__ico">≣</span>Case</button>
+  </nav>
+
+  <script src="../shared/vendor/leaflet/leaflet.js"></script>
+  <script src="../shared/config.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

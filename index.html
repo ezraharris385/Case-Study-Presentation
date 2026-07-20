@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cold-Chain Site Cockpit</title>
+  <meta name="description" content="Interactive site-selection cockpit — desktop view and phone view." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared/theme.css" />
+  <style>
+    body { min-height: 100vh; display: grid; place-items: center; padding: 24px;
+      background:
+        radial-gradient(1100px 520px at 78% -8%, var(--accent-soft), transparent 60%),
+        radial-gradient(900px 480px at 8% 108%, var(--navy-soft), transparent 55%),
+        var(--bg); }
+    .cover { width: 100%; max-width: 940px; }
+    .cover__eyebrow { margin-bottom: 12px; }
+    .cover__title { font-size: clamp(2rem, 5vw, 3.1rem); letter-spacing: -0.02em; margin-bottom: 10px; }
+    .cover__title b { color: var(--accent-strong); font-weight: 800; }
+    .cover__lede { color: var(--ink-2); max-width: 60ch; margin-bottom: 30px; font-size: 1.05rem; }
+    .cards { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+      box-shadow: var(--shadow-1); padding: 26px; display: flex; flex-direction: column; }
+    .card h2 { font-size: 1.3rem; margin-bottom: 4px; }
+    .card p { color: var(--ink-muted); font-size: 0.92rem; }
+    .card__spacer { flex: 1; }
+    .go { display: inline-flex; align-items: center; gap: 9px; align-self: flex-start; margin-top: 18px;
+      padding: 13px 22px; border-radius: var(--r-sm); background: var(--accent); color: #fff;
+      text-decoration: none; font-weight: 700; font-size: 1rem; }
+    .go:hover { background: var(--accent-strong); }
+    .qr-wrap { display: flex; gap: 18px; align-items: center; margin-top: 16px; }
+    .qr-box { width: 148px; height: 148px; flex: 0 0 auto; border-radius: var(--r-md); background: #fff;
+      border: 1px solid var(--line); display: grid; place-items: center; padding: 8px; }
+    .qr-box img, .qr-box canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+    .qr-fallback { font-size: 0.72rem; color: var(--ink-muted); text-align: center; padding: 8px; }
+    .qr-meta .eyebrow { margin-bottom: 6px; }
+    .qr-link { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent-strong); word-break: break-all; }
+    .foot { margin-top: 26px; display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.8rem; color: var(--ink-muted); flex-wrap: wrap; gap: 10px; }
+    .theme-toggle { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink);
+      width: 34px; height: 34px; border-radius: 8px; cursor: pointer; }
+    @media (max-width: 720px) { .cards { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="cover">
+    <div class="cover__eyebrow eyebrow" id="eyebrow">Site Selection · Greater Chicago Cold Storage</div>
+    <h1 class="cover__title">Cold-Chain <b>Site Cockpit</b></h1>
+    <p class="cover__lede">An interactive read on the finalist sites — 10-mile reach, drive times, labor, criteria scores, lease terms, incentives &amp; TCO — plus a two-minute take-home survey.</p>
+
+    <div class="cards">
+      <div class="card">
+        <h2>On screen</h2>
+        <p>Full desktop cockpit — map hero, site drawer, and every case component.</p>
+        <div class="card__spacer"></div>
+        <a class="go" href="desktop/">Open the cockpit →</a>
+      </div>
+      <div class="card">
+        <h2>On your phone</h2>
+        <p>Scan to explore the sites and leave your priorities.</p>
+        <div class="qr-wrap">
+          <div class="qr-box" id="qrBox">
+            <div class="qr-fallback" id="qrFallback">QR generates on deploy —<br>or open the link below.</div>
+          </div>
+          <div class="qr-meta">
+            <div class="eyebrow">Phone build</div>
+            <a class="qr-link" id="phoneLink" href="mobile/">mobile/</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span id="footBrand">Your Firm · Site Selection</span>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">◐</button>
+    </div>
+  </main>
+
+  <script src="shared/config.js"></script>
+  <script>
+    (function () {
+      var CFG = window.CASE_CONFIG || {};
+      if (CFG.engagementLine) document.getElementById("eyebrow").textContent = CFG.engagementLine;
+      if (CFG.firmName) document.getElementById("footBrand").textContent = CFG.firmName + " · Site Selection";
+
+      // Resolve the phone URL from config, else from this page's location.
+      var phoneUrl = CFG.phoneUrl || new URL("mobile/", location.href).href;
+      var link = document.getElementById("phoneLink");
+      link.href = phoneUrl; link.textContent = phoneUrl.replace(/^https?:\/\//, "");
+
+      // Show generated QR PNG if present (added during deploy).
+      var img = new Image();
+      img.onload = function () {
+        var box = document.getElementById("qrBox");
+        box.innerHTML = ""; box.appendChild(img);
+      };
+      img.alt = "QR code to the phone build";
+      img.src = "assets/qr-mobile.png";
+
+      // theme
+      var saved = null; try { saved = localStorage.getItem("cockpit-theme"); } catch (e) {}
+      if (saved) document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("themeToggle").addEventListener("click", function () {
+        var t = document.documentElement.getAttribute("data-theme");
+        var dark = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var next = dark ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        try { localStorage.setItem("cockpit-theme", next); } catch (e) {}
+      });
+    })();
+  </script>
+</body>
+</html>

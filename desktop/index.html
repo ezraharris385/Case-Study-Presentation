@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cold-Chain Site Cockpit — Desktop</title>
+  <meta name="description" content="Interactive site-selection cockpit for a Greater Chicago cold-storage search." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../shared/vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="../shared/theme.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===== Top bar ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand__mark" aria-hidden="true"></div>
+      <div class="brand__text">
+        <span class="brand__firm" id="firmName">Your Firm</span>
+        <span class="brand__eng" id="engLine">Site Selection</span>
+      </div>
+    </div>
+    <div class="topbar__meta">
+      <span class="pill" id="clientPill">Client</span>
+      <span class="eyebrow" id="asOf">As of —</span>
+      <button class="icon-btn" id="themeToggle" title="Toggle light / dark" aria-label="Toggle theme">◐</button>
+    </div>
+  </header>
+
+  <!-- ===== Sample-data banner ===== -->
+  <div class="sample-banner" id="sampleBanner" hidden>
+    <strong>Sample data.</strong> Placeholder figures so the map renders — replace with the real case data.
+  </div>
+
+  <!-- ===== App shell ===== -->
+  <div class="app">
+    <!-- Left nav -->
+    <nav class="sidenav" id="sidenav" aria-label="Sections">
+      <button class="navitem is-active" data-view="map"><span class="navitem__ico">◎</span>Map</button>
+      <div class="navgroup eyebrow">Case</div>
+      <button class="navitem" data-view="needs"><span class="navitem__ico">◇</span>Needs</button>
+      <button class="navitem" data-view="swot"><span class="navitem__ico">▚</span>SWOT</button>
+      <button class="navitem" data-view="market"><span class="navitem__ico">▤</span>Market</button>
+      <div class="navgroup eyebrow">Sites</div>
+      <button class="navitem" data-view="sites"><span class="navitem__ico">▣</span>Site detail</button>
+      <button class="navitem" data-view="drive"><span class="navitem__ico">↝</span>Drive distances</button>
+      <button class="navitem" data-view="labor"><span class="navitem__ico">☰</span>Labor forces</button>
+      <button class="navitem" data-view="criteria"><span class="navitem__ico">◧</span>Criteria scores</button>
+      <div class="navgroup eyebrow">Deal</div>
+      <button class="navitem" data-view="lease"><span class="navitem__ico">§</span>Lease terms</button>
+      <button class="navitem" data-view="tco"><span class="navitem__ico">$</span>Incentives &amp; TCO</button>
+      <button class="navitem" data-view="timeline"><span class="navitem__ico">⟶</span>Timeline</button>
+      <button class="navitem" data-view="next"><span class="navitem__ico">➔</span>Next steps</button>
+      <div class="navgroup eyebrow">Client</div>
+      <button class="navitem navitem--cta" data-view="survey"><span class="navitem__ico">✎</span>Take-home survey</button>
+    </nav>
+
+    <!-- Map hero -->
+    <main class="stage">
+      <div id="map" class="map"></div>
+
+      <!-- Floating layer control -->
+      <div class="layers" id="layers">
+        <div class="layers__title eyebrow">Map layers</div>
+        <label class="layers__row"><input type="checkbox" id="lyr-sites" checked /> <span>Finalist sites</span></label>
+        <label class="layers__row"><input type="checkbox" id="lyr-rings" checked /> <span>10-mile reach</span></label>
+        <label class="layers__row"><input type="checkbox" id="lyr-nodes" checked /> <span>Logistics nodes</span></label>
+        <label class="layers__row"><input type="checkbox" id="lyr-labor" /> <span>Labor shed</span></label>
+        <label class="layers__row"><input type="checkbox" id="lyr-alt" /> <span>Also-considered</span></label>
+      </div>
+
+      <!-- Map legend -->
+      <div class="legend" id="legend">
+        <span><i class="dot dot--site"></i>Finalist</span>
+        <span><i class="dot dot--alt"></i>Also-considered</span>
+        <span><i class="dot dot--node"></i>Logistics node</span>
+      </div>
+    </main>
+
+    <!-- Right drawer (site detail / section panels) -->
+    <aside class="drawer" id="drawer" aria-live="polite" hidden>
+      <button class="drawer__close" id="drawerClose" aria-label="Close">✕</button>
+      <div class="drawer__body" id="drawerBody"></div>
+    </aside>
+  </div>
+
+  <script src="../shared/vendor/leaflet/leaflet.js"></script>
+  <script src="../shared/config.js"></script>
+  <script src="../shared/data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
