@@ -1,0 +1,10 @@
+label,value,type
+Facility size,"250,000–300,000 SF",requirement
+Temperature,70% freezer (-10°F) / 30% cooler (34°F),requirement
+Power,"≥ 4 MW service, redundant feed",requirement
+Throughput,"Regional DC — 40 dock doors, cross-dock",requirement
+Timeline,Occupancy within 12–18 months,requirement
+Labor,180–220 FTE at stabilization,requirement
+No rail-served requirement,,dealbreaker
+Must be ≤ 45 min to O'Hare cold air-freight,,dealbreaker
+Ammonia-permittable,,dealbreaker

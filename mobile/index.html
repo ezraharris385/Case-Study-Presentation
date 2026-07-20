@@ -21,7 +21,10 @@
       <span class="mhead__mark" aria-hidden="true"></span>
       <span class="mhead__client" id="clientName">Client</span>
     </div>
-    <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">◐</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="icon-btn" id="openLoader" aria-label="Load data">＋</button>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme">◐</button>
+    </div>
   </header>
 
   <div class="sample-banner" id="sampleBanner" hidden><strong>Sample data</strong> — placeholders for the demo.</div>
@@ -33,6 +36,7 @@
       <div class="mlayers" id="mlayers">
         <button class="chip-toggle is-on" data-layer="rings">10-mi reach</button>
         <button class="chip-toggle is-on" data-layer="nodes">Nodes</button>
+        <button class="chip-toggle is-on" data-layer="demo" id="chip-demo" hidden>Demographics</button>
         <button class="chip-toggle" data-layer="labor">Labor shed</button>
         <button class="chip-toggle" data-layer="alt">Also-considered</button>
       </div>
@@ -69,9 +73,40 @@
     <button class="tab" data-tab="info"><span class="tab__ico">≣</span>Case</button>
   </nav>
 
+  <!-- Data loader modal -->
+  <div class="modal" id="loaderModal" hidden>
+    <div class="modal__scrim" id="loaderScrim"></div>
+    <div class="modal__card" role="dialog" aria-label="Load data">
+      <button class="modal__close" id="loaderClose" aria-label="Close">✕</button>
+      <div class="eyebrow">Load your data</div>
+      <h2 style="margin:4px 0 6px">Drop in your files</h2>
+      <p class="modal__lede">CSV, Excel (.xlsx), or GeoJSON — sites, demographics, requirements. Stored on this device for this build only.</p>
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" multiple accept=".csv,.tsv,.txt,.xlsx,.xls,.geojson,.json" hidden />
+        <div class="dropzone__inner"><div class="dropzone__ico">⬆</div><div><strong>Tap to choose files</strong></div><div class="dropzone__hint">sites · demographics · requirements</div></div>
+      </div>
+      <div class="filelist" id="filelist"></div>
+      <div class="modal__row">
+        <button class="btn" id="applyBtn" disabled>Apply</button>
+        <button class="btn btn--ghost" id="resetBtn">Reset</button>
+      </div>
+      <div id="loaderMsg" class="loader-msg"></div>
+      <details class="templates"><summary>Need the format? Download a template</summary>
+        <div class="templates__row">
+          <a class="pill" href="../templates/sites-template.csv" download>sites</a>
+          <a class="pill" href="../templates/demographics-template.csv" download>demographics</a>
+          <a class="pill" href="../templates/requirements-template.csv" download>requirements</a>
+        </div>
+      </details>
+    </div>
+  </div>
+
   <script src="../shared/vendor/leaflet/leaflet.js"></script>
+  <script src="../shared/vendor/papaparse.min.js"></script>
+  <script src="../shared/vendor/xlsx.full.min.js"></script>
   <script src="../shared/config.js"></script>
   <script src="../shared/data.js"></script>
+  <script src="../shared/loader.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

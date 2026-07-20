@@ -49,10 +49,28 @@ The take-home survey can write real responses to a Google Sheet you own (recomme
 or Formspree. 3-minute setup in [`backend/README.md`](./backend/README.md). Until you
 configure it, the survey still works and echoes results locally.
 
-## Plugging in your data
+## Loading your data (no code)
 
-Everything the app shows lives in `shared/data.js`, commented field-by-field. Replace the
-`SAMPLE —` entries with the real:
+Each build has a **＋ Load data** button. Drop in **CSV, Excel (.xlsx), or GeoJSON** files —
+sites, demographics, and client requirements — and the Chicago map + every component adjust
+live. Uploads are remembered per device, per build (the two builds are independent — load into
+each). Column names are flexible (`rent`, `askingRent`, `rentNNN` all map). Grab a starting
+point from `/templates/`, or from the modal's "Download a template" link.
+
+- **sites** — one row per site; needs `lat`/`lng`; supports `tier` (primary / also-considered),
+  rent, size, power, cold-readiness, `criteriaScore` + `score*` columns, labor, incentives, pros/cons.
+- **demographics** — `lat`/`lng` + any metric columns (population, income, labor force…) →
+  graduated circles on the map; or a **GeoJSON** of polygons → choropleth.
+- **requirements** — `label`, `value`, optional `type` (`requirement` / `dealbreaker`) → the Needs panel.
+
+The **`/data`** folder auto-loads on startup as the default dataset (currently a greater-Chicago
+demo). Replace those three CSVs to change the built-in default for both builds; an in-app upload
+overrides it on that device.
+
+## Plugging in data via code (optional)
+
+Everything also lives in `shared/data.js`, commented field-by-field, for sections the loader
+doesn't cover yet (SWOT, market, lease terms, timeline, TCO inputs). Replace the `SAMPLE —` entries with the real:
 
 - **sites** — the finalists (coords, specs, power, rent, drive times, labor, incentives, criteria scores, pros/cons)
 - **alsoConsidered** — sites that didn't make the shortlist (lighter data; shown as hollow pins)

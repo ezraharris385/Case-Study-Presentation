@@ -203,6 +203,48 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .toast--ok { background: var(--good-soft); color: var(--good); }
 .toast--err { background: var(--crit-soft); color: var(--crit); }
 
+/* Button size + link pills */
+.btn--sm { padding: 7px 12px; font-size: 0.82rem; }
+a.pill { text-decoration: none; }
+.linklike { background: none; border: none; color: var(--accent-strong); cursor: pointer; font: inherit; text-decoration: underline; padding: 0; }
+
+/* Demographics legend (floats under layers panel) */
+.demo-legend { position: absolute; left: 14px; bottom: 62px; z-index: 500; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-1); padding: 10px 12px; width: 190px; }
+.demo-legend__row { display: flex; align-items: flex-end; gap: 8px; margin-top: 6px; }
+.demo-bub { display: inline-block; border-radius: 50%; background: var(--accent); opacity: 0.5; border: 1px solid var(--accent-strong); }
+.demo-bub--sm { width: 10px; height: 10px; } .demo-bub--md { width: 18px; height: 18px; } .demo-bub--lg { width: 28px; height: 28px; }
+.demo-legend__cap { font-size: 0.72rem; color: var(--ink-muted); margin-top: 4px; }
+.demo-ramp { height: 12px; border-radius: 3px; margin: 6px 0 2px; background: linear-gradient(90deg, var(--accent-soft), var(--accent), var(--accent-strong)); }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; }
+.modal[hidden] { display: none; }
+.modal__scrim { position: absolute; inset: 0; background: rgba(6,14,22,0.5); }
+.modal__card { position: relative; width: 560px; max-width: 92vw; max-height: 88vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-2); padding: 26px 28px; }
+.modal__close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); cursor: pointer; }
+.modal__lede { color: var(--ink-muted); font-size: 0.9rem; margin-bottom: 16px; }
+.modal__row { display: flex; gap: 10px; margin-top: 16px; }
+
+.dropzone { border: 2px dashed var(--line-strong); border-radius: var(--r-md); background: var(--surface-2); padding: 26px; text-align: center; transition: border-color 0.15s, background 0.15s; }
+.dropzone.is-over { border-color: var(--accent); background: var(--accent-soft); }
+.dropzone__ico { font-size: 1.6rem; color: var(--accent-strong); }
+.dropzone__inner { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.dropzone__hint { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); }
+
+.filelist { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.fileitem { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); }
+.fileitem--err { border-color: var(--crit); background: var(--crit-soft); }
+.fileitem__name { font-weight: 600; font-size: 0.86rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fileitem select { padding: 5px 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 0.8rem; }
+.fileitem__x { width: 26px; height: 26px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; cursor: pointer; color: var(--ink-2); }
+
+.loader-msg { margin-top: 10px; font-size: 0.85rem; }
+.loader-msg--ok { color: var(--good); }
+.templates { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+.templates summary { cursor: pointer; font-size: 0.85rem; color: var(--accent-strong); }
+.templates__row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+code { font-family: var(--font-mono); font-size: 0.85em; background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
+
 /* Narrower screens: collapse sidebar to icons, drawer full-ish */
 @media (max-width: 1040px) {
   .app { grid-template-columns: 64px 1fr; }
