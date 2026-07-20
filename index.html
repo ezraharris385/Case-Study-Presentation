@@ -78,6 +78,7 @@
     </div>
   </main>
 
+  <script src="shared/vendor/qrcode.min.js"></script>
   <script src="shared/config.js"></script>
   <script>
     (function () {
@@ -90,14 +91,22 @@
       var link = document.getElementById("phoneLink");
       link.href = phoneUrl; link.textContent = phoneUrl.replace(/^https?:\/\//, "");
 
-      // Show generated QR PNG if present (added during deploy).
-      var img = new Image();
-      img.onload = function () {
-        var box = document.getElementById("qrBox");
-        box.innerHTML = ""; box.appendChild(img);
-      };
-      img.alt = "QR code to the phone build";
-      img.src = "assets/qr-mobile.png";
+      // Render the QR at runtime from the ACTUAL phone URL (works on any domain).
+      var box = document.getElementById("qrBox");
+      var rendered = false;
+      try {
+        if (typeof qrcode === "function") {
+          var qr = qrcode(0, "M"); qr.addData(phoneUrl); qr.make();
+          box.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 1, scalable: true });
+          var svg = box.querySelector("svg"); if (svg) { svg.setAttribute("width", "100%"); svg.setAttribute("height", "100%"); }
+          rendered = true;
+        }
+      } catch (e) {}
+      if (!rendered) { // fallback to the committed PNG
+        var img = new Image(); img.alt = "QR code to the phone build";
+        img.onload = function () { box.innerHTML = ""; box.appendChild(img); };
+        img.src = "assets/qr-mobile.png";
+      }
 
       // theme
       var saved = null; try { saved = localStorage.getItem("cockpit-theme"); } catch (e) {}
