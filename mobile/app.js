@@ -34,7 +34,8 @@
   $("#themeToggle").addEventListener("click", function () { var next = currentDark() ? "light" : "dark"; document.documentElement.setAttribute("data-theme", next); try { localStorage.setItem("cockpit-theme", next); } catch (e) {} swapTiles(); renderMap({ fit: false }); });
 
   /* Map */
-  var map = L.map("map", { center: CFG.map.center, zoom: CFG.map.zoom, minZoom: CFG.map.minZoom, maxZoom: CFG.map.maxZoom, zoomControl: false });
+  var map = L.map("map", { center: CFG.map.center, zoom: CFG.map.zoom, minZoom: CFG.map.minZoom, maxZoom: CFG.map.maxZoom, zoomControl: false, preferCanvas: true, tap: false, zoomAnimationThreshold: 4 });
+  var vectorRenderer = L.canvas({ padding: 0.5 });
   L.control.zoom({ position: "topright" }).addTo(map);
   var baseMode = "street";
   var tileLayer = null;
@@ -43,7 +44,7 @@
     var url, attr, maxZ = CFG.map.maxZoom;
     if (baseMode === "satellite") { url = CFG.map.tilesSatellite; attr = CFG.map.attributionSatellite; maxZ = 18; }
     else { url = currentDark() ? CFG.map.tilesDark : CFG.map.tilesLight; attr = CFG.map.attribution; }
-    tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true }).addTo(map);
+    tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true, updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 3 }).addTo(map);
   }
   swapTiles();
   var groups = { alt: L.layerGroup() };
@@ -69,10 +70,10 @@
     (D.sites || []).forEach(function (s, i) {
       if (!s.coords) return;
       refSite[s.id] = L.marker(s.coords, { icon: siteIcon(i) }).on("click", function () { openSite(s); });
-      refRing[s.id] = L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.05 });
-      refLabor[s.id] = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.04 });
+      refRing[s.id] = L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, renderer: vectorRenderer, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.05 });
+      refLabor[s.id] = L.circle(s.coords, { radius: 20 * 1609.34, renderer: vectorRenderer, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.04 });
       var ig = L.layerGroup();
-      (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false }).addTo(ig); });
+      (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false, renderer: vectorRenderer, smoothFactor: 2 }).addTo(ig); });
       refIso[s.id] = ig;
     });
     (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon() }).on("click", function () { openAlt(s); }).addTo(groups.alt); });
