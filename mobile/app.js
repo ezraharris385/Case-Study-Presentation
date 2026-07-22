@@ -48,8 +48,9 @@
   swapTiles();
   function clusterIcon(cluster) { return L.divIcon({ html: '<div class="cl-bub">' + cluster.getChildCount() + "</div>", className: "cl-wrap", iconSize: [36, 36] }); }
   var altGroup = (typeof L.markerClusterGroup === "function") ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 55, spiderfyOnMaxZoom: true, iconCreateFunction: clusterIcon }) : L.layerGroup();
-  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup };
-  var groupToggles = { rings: true, alt: false };
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup, iso: L.layerGroup() };
+  var groupToggles = { rings: true, alt: false, iso: false };
+  function isoStyle(t) { return t <= 15 ? { color: css("--navy"), weight: 1.4, opacity: 0.85, fillColor: css("--navy"), fillOpacity: 0.16 } : { color: css("--navy"), weight: 1, opacity: 0.6, dashArray: "4 3", fillColor: css("--navy"), fillOpacity: 0.06 }; }
   var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
   function siteIcon(i) { return L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 32], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
@@ -59,7 +60,7 @@
   var didFit = false;
   function renderMap(opts) {
     opts = opts || {};
-    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers();
+    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers(); groups.iso.clearLayers();
     Object.keys(benchmarkMk).forEach(function (id) { if (map.hasLayer(benchmarkMk[id])) map.removeLayer(benchmarkMk[id]); });
     Object.keys(laborCircle).forEach(function (id) { if (map.hasLayer(laborCircle[id])) map.removeLayer(laborCircle[id]); });
     benchmarkMk = {}; laborCircle = {};
@@ -70,6 +71,7 @@
       if (!(s.id in laborOn)) laborOn[s.id] = false;
       var lc = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
       laborCircle[s.id] = lc; if (laborOn[s.id]) lc.addTo(map);
+      (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false }).addTo(groups.iso); });
     });
     (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon() }).on("click", function () { openAlt(s); }).addTo(groups.alt); });
     (D.nodes || []).forEach(function (n) {
@@ -86,8 +88,9 @@
 
   function shortNode(n) { return clean(n.name).replace(/\s*\(.*\)/, "").replace("Int’l", "").trim(); }
   function buildChips() {
-    var c = '<button class="chip-toggle' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="1">🛰 Satellite</button>';
+    var c = '<button class="chip-toggle chip-toggle--base' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="1">🛰 Satellite</button>';
     c += '<button class="chip-toggle' + (groupToggles.rings ? " is-on" : "") + '" data-grp="rings">10-mi</button>';
+    c += '<button class="chip-toggle' + (groupToggles.iso ? " is-on" : "") + '" data-grp="iso">Drive-time</button>';
     c += '<button class="chip-toggle' + (groupToggles.alt ? " is-on" : "") + '" data-grp="alt">Others</button>';
     (D.nodes || []).forEach(function (n) { c += '<button class="chip-toggle' + (benchmarkOn[n.id] ? " is-on" : "") + '" data-bench="' + n.id + '">' + esc(shortNode(n)) + "</button>"; });
     (D.sites || []).forEach(function (s) { c += '<button class="chip-toggle chip-toggle--shed' + (laborOn[s.id] ? " is-on" : "") + '" data-shed="' + s.id + '">◱ ' + esc(s.city) + "</button>"; });
@@ -105,7 +108,7 @@
   var sheet = $("#sheet"), sheetBody = $("#sheetBody"), scrim = $("#scrim");
   function openSheet(html) { sheetBody.innerHTML = html; sheet.hidden = false; scrim.hidden = false; sheetBody.scrollTop = 0; }
   function closeSheet() { sheet.hidden = true; scrim.hidden = true; }
-  scrim.addEventListener("click", closeSheet); $("#sheetGrab").addEventListener("click", closeSheet);
+  scrim.addEventListener("click", closeSheet); $("#sheetGrab").addEventListener("click", closeSheet); $("#sheetClose").addEventListener("click", closeSheet);
 
   function renderChecklist(list) { if (!list || !list.length) return ""; return '<ul class="chk">' + list.map(function (c) { return c.status === "met" ? '<li class="chk--met"><span class="chk__ico">✓</span><span class="chk__lbl">' + esc(c.label) + "</span></li>" : '<li class="chk--rfd"><span class="chk__ico chk__ico--rfd">–</span><span class="chk__lbl">' + esc(c.label) + '</span><em class="chk__note">requires further due diligence</em></li>'; }).join("") + "</ul>"; }
   function demoMini(s) { var d = s.demo; if (!d) return ""; return '<div class="d-section"><h4>10-mile demographics</h4><dl class="kv">' + kv("Population", fmt(d.pop10mi)) + kv("Median HH income", d.medHHinc ? "$" + fmt(d.medHHinc) : "—") + kv("Labor force", fmt(d.laborForce)) + kv("Unemployment", d.unemploymentPct != null ? d.unemploymentPct + "%" : "—") + kv("Transp/whse jobs", fmt(d.twEmployment)) + kv("Bachelor’s+", d.bachelorsPlusPct != null ? d.bachelorsPlusPct + "%" : "—") + "</dl></div>"; }
@@ -127,6 +130,7 @@
 
   /* Tabs */
   function activate(tab) {
+    closeSheet();
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.classList.toggle("is-active", b.dataset.tab === tab); });
     Array.prototype.forEach.call(document.querySelectorAll(".tabview"), function (v) { v.classList.toggle("is-active", v.id === "tab-" + tab); });
     if (tab === "map") setTimeout(function () { map.invalidateSize(); }, 60);

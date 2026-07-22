@@ -59,8 +59,9 @@
 
   function clusterIcon(cluster) { return L.divIcon({ html: '<div class="cl-bub">' + cluster.getChildCount() + "</div>", className: "cl-wrap", iconSize: [36, 36] }); }
   var altGroup = (typeof L.markerClusterGroup === "function") ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 55, spiderfyOnMaxZoom: true, iconCreateFunction: clusterIcon }) : L.layerGroup();
-  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup.addTo(map) };
-  var groupToggles = { sites: true, rings: true, alt: true };
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup.addTo(map), iso: L.layerGroup() };
+  var groupToggles = { sites: true, rings: true, alt: true, iso: false };
+  function isoStyle(t) { return t <= 15 ? { color: css("--navy"), weight: 1.4, opacity: 0.85, fillColor: css("--navy"), fillOpacity: 0.16 } : { color: css("--navy"), weight: 1, opacity: 0.6, dashArray: "4 3", fillColor: css("--navy"), fillOpacity: 0.06 }; }
   var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
   function siteIcon(i) { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 28], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
@@ -71,7 +72,7 @@
   var didFitOnce = false;
   function renderMap(opts) {
     opts = opts || {};
-    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers();
+    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers(); groups.iso.clearLayers();
     Object.keys(benchmarkMk).forEach(function (id) { if (map.hasLayer(benchmarkMk[id])) map.removeLayer(benchmarkMk[id]); });
     Object.keys(laborCircle).forEach(function (id) { if (map.hasLayer(laborCircle[id])) map.removeLayer(laborCircle[id]); });
     benchmarkMk = {}; laborCircle = {};
@@ -83,6 +84,7 @@
       if (!(s.id in laborOn)) laborOn[s.id] = false;
       var lc = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
       laborCircle[s.id] = lc; if (laborOn[s.id]) lc.addTo(map);
+      (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false }).addTo(groups.iso); });
     });
     (D.alsoConsidered || []).forEach(function (s) {
       if (!s.coords) return;
@@ -103,20 +105,27 @@
 
   /* ---------- Layers control (benchmarks + labor sheds individually) ---------- */
   function buildLayersPanel() {
-    var bench = (D.nodes || []).map(function (n) { return '<label class="layers__row layers__row--sub"><input type="checkbox" data-bench="' + n.id + '"' + (benchmarkOn[n.id] ? " checked" : "") + '> <span>' + esc(clean(n.name)) + "</span></label>"; }).join("");
-    var sheds = (D.sites || []).map(function (s) { return '<label class="layers__row layers__row--sub"><input type="checkbox" data-shed="' + s.id + '"' + (laborOn[s.id] ? " checked" : "") + '> <span>' + esc(s.city) + "</span></label>"; }).join("");
+    function row(attr, label, on, sub, swatch) {
+      return '<label class="layers__row' + (sub ? " layers__row--sub" : "") + '"><input type="checkbox" ' + attr + (on ? " checked" : "") + '> ' +
+        (swatch ? '<i class="layers__sw layers__sw--' + swatch + '"></i>' : "") + "<span>" + label + "</span></label>";
+    }
+    var bench = (D.nodes || []).map(function (n) { return row('data-bench="' + n.id + '"', esc(clean(n.name)), benchmarkOn[n.id], true); }).join("");
+    var sheds = (D.sites || []).map(function (s) { return row('data-shed="' + s.id + '"', esc(s.city), laborOn[s.id], true); }).join("");
     $("#layers").innerHTML =
-      '<div class="layers__title eyebrow">Basemap</div>' +
-      '<div class="basemap"><button class="basemap__btn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">Map</button><button class="basemap__btn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">Satellite</button></div>' +
-      '<div class="layers__title eyebrow">Layers</div>' +
-      '<label class="layers__row"><input type="checkbox" data-grp="sites"' + (groupToggles.sites ? " checked" : "") + '> <span>Finalist sites</span></label>' +
-      '<label class="layers__row"><input type="checkbox" data-grp="rings"' + (groupToggles.rings ? " checked" : "") + '> <span>10-mile reach</span></label>' +
-      '<label class="layers__row"><input type="checkbox" data-grp="alt"' + (groupToggles.alt ? " checked" : "") + '> <span>Also-considered</span></label>' +
-      '<div class="layers__title eyebrow" style="margin-top:12px">Benchmarks</div>' + bench +
-      '<div class="layers__title eyebrow" style="margin-top:12px">Labor sheds</div>' + sheds;
+      '<div class="layers__seg">' +
+        '<button class="layers__segbtn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">◱ Map</button>' +
+        '<button class="layers__segbtn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">🛰 Satellite</button>' +
+      "</div>" +
+      '<div class="layers__group"><div class="layers__title eyebrow">Sites &amp; reach</div>' +
+        row('data-grp="sites"', "Finalist sites", groupToggles.sites, false, "site") +
+        row('data-grp="alt"', "Also-considered", groupToggles.alt, false, "alt") +
+        row('data-grp="rings"', "10-mile reach", groupToggles.rings, false, "ring") +
+        row('data-grp="iso"', "Drive-time reach", groupToggles.iso, false, "iso") + "</div>" +
+      '<div class="layers__group"><div class="layers__title eyebrow">Benchmarks</div>' + bench + "</div>" +
+      '<div class="layers__group"><div class="layers__title eyebrow">Labor sheds</div>' + sheds + "</div>";
   }
   document.addEventListener("click", function (e) {
-    var bb = e.target.closest(".basemap__btn");
+    var bb = e.target.closest(".layers__segbtn");
     if (bb) { baseMode = bb.dataset.base; swapTiles(); buildLayersPanel(); }
   });
   document.addEventListener("change", function (e) {

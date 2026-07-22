@@ -121,6 +121,8 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .sheet[hidden] { display: flex; transform: translateY(103%); pointer-events: none; }
 .sheet__grab { display: grid; place-items: center; padding: 10px 0 4px; cursor: grab; }
 .sheet__grab span { width: 40px; height: 4px; border-radius: 100px; background: var(--line-strong); }
+.sheet__close { position: absolute; top: 8px; right: 12px; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink); font-size: 0.95rem; z-index: 3; }
+.chip-toggle--base.is-on { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
 .sheet__body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 18px calc(28px + env(safe-area-inset-bottom)); }
 .sheet h2 { font-size: 1.3rem; margin-bottom: 2px; }
 .sheet .d-sub { color: var(--ink-muted); font-size: 0.86rem; margin-bottom: 14px; }

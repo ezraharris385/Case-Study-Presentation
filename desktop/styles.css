@@ -136,12 +136,19 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .sidenav { display: flex; flex-direction: column; }
 .sidenav__foot { margin-top: auto; padding: 12px 8px 4px; font-size: 0.68rem; line-height: 1.45; color: var(--ink-muted); border-top: 1px solid var(--line); }
 
-/* Basemap switch + granular layer toggles */
-.layers { max-height: calc(100% - 28px); overflow-y: auto; }
-.basemap { display: flex; gap: 6px; margin: 6px 0 4px; }
-.basemap__btn { flex: 1; padding: 6px 8px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); border-radius: 6px; font-size: 0.78rem; cursor: pointer; }
-.basemap__btn.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 600; }
-.layers__row--sub { padding-left: 6px; font-size: 0.82rem; }
+/* Layers panel — categorized, basemap on top */
+.layers { width: 210px; max-height: calc(100% - 28px); overflow-y: auto; padding: 14px; }
+.layers__seg { display: flex; gap: 6px; margin-bottom: 12px; }
+.layers__segbtn { flex: 1; padding: 9px 8px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.layers__segbtn.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
+.layers__group { padding-top: 11px; margin-top: 10px; border-top: 1px solid var(--line); }
+.layers__group .layers__title { margin-bottom: 7px; }
+.layers__row--sub { padding-left: 4px; font-size: 0.83rem; }
+.layers__sw { width: 12px; height: 12px; flex: 0 0 auto; display: inline-block; }
+.layers__sw--site { background: var(--site-primary); border-radius: 50%; }
+.layers__sw--alt { background: transparent; border: 2px solid var(--site-alt); border-radius: 50%; }
+.layers__sw--ring { background: var(--ring-color); opacity: 0.35; border-radius: 50%; border: 1px solid var(--ring-color); }
+.layers__sw--iso { background: var(--navy); opacity: 0.5; border-radius: 3px; }
 
 /* Rent chip */
 .rentchip { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 4px; }
