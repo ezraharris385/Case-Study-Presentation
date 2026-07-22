@@ -89,6 +89,7 @@
       setVis(refIso[id], live && on.feat.iso);
       setVis(refLabor[id], live && on.feat.labor);
     });
+    var leg = $("#mDriveLegend"); if (leg) leg.hidden = !on.feat.iso;
   }
 
   var didFit = false;

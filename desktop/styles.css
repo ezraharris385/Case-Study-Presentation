@@ -80,6 +80,9 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .dot--site { background: var(--site-primary); }
 .dot--alt { background: transparent; border: 2px solid var(--site-alt); }
 .dot--node { background: var(--node-color); border-radius: 2px; }
+.legend__drive { display: inline-flex; align-items: center; gap: 14px; padding-left: 14px; border-left: 1px solid var(--line); }
+.leg-line { width: 18px; height: 0; border-top: 2.2px solid var(--navy); display: inline-block; vertical-align: middle; }
+.leg-line--dash { border-top: 1.6px dashed var(--navy); }
 
 /* Map markers (divIcon) */
 .mk { display: grid; place-items: center; font-weight: 700; color: #fff; box-shadow: var(--shadow-1); }

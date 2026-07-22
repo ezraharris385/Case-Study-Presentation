@@ -98,6 +98,14 @@
       setVis(refIso[id], live && on.feat.iso);
       setVis(refLabor[id], live && on.feat.labor);
     });
+    updateDriveLegend();
+  }
+  function updateDriveLegend() {
+    var leg = document.getElementById("legend"); if (!leg) return;
+    var ex = leg.querySelector(".legend__drive");
+    if (on.feat.iso) {
+      if (!ex) { var d = document.createElement("span"); d.className = "legend__drive"; d.innerHTML = '<span><i class="leg-line"></i>15-min drive</span><span><i class="leg-line leg-line--dash"></i>30-min drive</span>'; leg.appendChild(d); }
+    } else if (ex) { ex.remove(); }
   }
 
   var didFitOnce = false;

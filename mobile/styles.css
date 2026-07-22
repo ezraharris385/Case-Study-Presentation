@@ -65,6 +65,18 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .mlay__sitehd { font-family: var(--font-display); font-weight: 700; font-size: 0.86rem; color: var(--ink); margin: 6px 4px 2px; }
 .mlay__row--feat { padding-left: 8px; font-size: 0.85rem; color: var(--ink-2); }
 
+/* drive-time legend (shown when Drive-time overlay is on) */
+.mdrive-legend {
+  position: absolute; left: 10px; top: 10px; z-index: 500;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow-1); padding: 8px 11px; display: flex; flex-direction: column; gap: 5px;
+  font-size: 0.76rem; color: var(--ink-2);
+}
+.mdrive-legend[hidden] { display: none; }
+.mdrive-legend span { display: flex; align-items: center; gap: 7px; }
+.leg-line { width: 18px; height: 0; border-top: 2.2px solid var(--navy); display: inline-block; flex: none; }
+.leg-line--dash { border-top: 1.6px dashed var(--navy); }
+
 /* markers reused from theme + here */
 .mk { display: grid; place-items: center; font-weight: 700; color: #fff; box-shadow: var(--shadow-1); }
 .mk--site { width: 34px; height: 34px; border-radius: 50% 50% 50% 4px; background: var(--site-primary); transform: rotate(45deg); border: 2px solid var(--surface); }
