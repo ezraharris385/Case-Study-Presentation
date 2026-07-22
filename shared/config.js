@@ -15,7 +15,7 @@ window.CASE_CONFIG = {
     minZoom: 7,
     maxZoom: 15,
     // Carto basemaps (no API key). Falls back gracefully if offline.
-    tilesLight: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    tilesLight: "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png",
     tilesDark: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
     attribution: "&copy; OpenStreetMap &copy; CARTO",
     // Aerial basemap (no CoStar imagery used). Esri World Imagery — free with attribution.

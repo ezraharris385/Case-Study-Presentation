@@ -185,6 +185,10 @@ a { color: var(--accent-strong); }
 .pill--accent { color: var(--accent-strong); background: var(--accent-soft); border-color: transparent; }
 .pill--alt { color: var(--site-alt); background: transparent; border-color: var(--site-alt); }
 
+/* Marker clusters (also-considered) */
+.cl-wrap { background: transparent !important; }
+.cl-bub { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 0.88rem; color: #fff; background: var(--site-alt); border: 2px solid var(--surface); box-shadow: 0 2px 8px rgba(14,27,42,0.25); }
+
 /* CBRE logo (shared) */
 .cbre-logo { display: inline-flex; align-items: center; justify-content: center; height: 30px; padding: 0 9px; border-radius: 5px; background: var(--accent-strong); color: #fff; font-family: var(--font-display); font-weight: 800; letter-spacing: 0.08em; font-size: 1.05rem; }
 :root[data-theme="dark"] .cbre-logo { color: #04140E; }

@@ -46,7 +46,9 @@
     tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true }).addTo(map);
   }
   swapTiles();
-  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: L.layerGroup() };
+  function clusterIcon(cluster) { return L.divIcon({ html: '<div class="cl-bub">' + cluster.getChildCount() + "</div>", className: "cl-wrap", iconSize: [36, 36] }); }
+  var altGroup = (typeof L.markerClusterGroup === "function") ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 55, spiderfyOnMaxZoom: true, iconCreateFunction: clusterIcon }) : L.layerGroup();
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup };
   var groupToggles = { rings: true, alt: false };
   var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
@@ -119,7 +121,7 @@
       ((s.leaseTerms && s.leaseTerms.length) ? '<div class="d-section"><h4>Lease terms to prioritize</h4><div class="chips">' + s.leaseTerms.map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div></div>" : "") +
       (drive ? '<div class="d-section"><h4>Drive to benchmarks</h4><table class="table"><tbody>' + drive + "</tbody></table></div>" : "") +
       demoMini(s));
-    if (s.coords) map.setView(s.coords, 13, { animate: true });
+    if (s.coords) map.flyTo(s.coords, 15, { duration: 0.8 });
   }
   function openAlt(s) { openSheet('<h2>' + esc(clean(s.name)) + '</h2><div class="d-sub">' + esc(s.address || "") + (s.city ? " · " + esc(s.city) : "") + " · also-considered</div><dl class=\"kv\">" + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Power", s.power) + "</dl><p class=\"form-note\" style=\"margin-top:10px\">Screened; not shortlisted to the final three.</p>"); if (s.coords) map.setView(s.coords, 11, { animate: true }); }
 

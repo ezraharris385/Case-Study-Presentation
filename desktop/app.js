@@ -57,7 +57,9 @@
   }
   swapTiles();
 
-  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: L.layerGroup().addTo(map) };
+  function clusterIcon(cluster) { return L.divIcon({ html: '<div class="cl-bub">' + cluster.getChildCount() + "</div>", className: "cl-wrap", iconSize: [36, 36] }); }
+  var altGroup = (typeof L.markerClusterGroup === "function") ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 55, spiderfyOnMaxZoom: true, iconCreateFunction: clusterIcon }) : L.layerGroup();
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup.addTo(map) };
   var groupToggles = { sites: true, rings: true, alt: true };
   var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
@@ -166,7 +168,7 @@
       (drive ? '<div class="d-section"><h4>Drive to benchmarks</h4><table class="table"><thead><tr><th>Benchmark</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + drive + "</tbody></table></div>" : "") +
       demoMini(s)
     );
-    map.setView(s.coords, 13, { animate: true });
+    if (s.coords) map.flyTo(s.coords, 15, { duration: 0.8 });
   }
   function openAlt(s) {
     openDrawer('<div class="d-eyebrow eyebrow">Also considered</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
