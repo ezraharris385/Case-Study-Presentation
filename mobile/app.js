@@ -46,34 +46,31 @@
     tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true }).addTo(map);
   }
   swapTiles();
-  var groups = { sites: L.layerGroup().addTo(map), alt: L.layerGroup() };
-  function isoStyle(t) { return t <= 15 ? { color: css("--navy"), weight: 1.4, opacity: 0.85, fillColor: css("--navy"), fillOpacity: 0.16 } : { color: css("--navy"), weight: 1, opacity: 0.6, dashArray: "4 3", fillColor: css("--navy"), fillOpacity: 0.06 }; }
+  var groups = { alt: L.layerGroup() };
+  function isoStyle(t) { return t <= 15 ? { color: css("--navy"), weight: 2.2, opacity: 0.95, lineJoin: "round", fillColor: css("--navy"), fillOpacity: 0.05 } : { color: css("--navy"), weight: 1.6, opacity: 0.7, dashArray: "5 4", lineJoin: "round", fill: false }; }
 
   function siteIcon(i) { return L.divIcon({ className: "", iconSize: [30, 38], iconAnchor: [15, 36], html: '<div class="pin pin--site"><span>' + (i + 1) + "</span></div>" }); }
   function altIcon() { return L.divIcon({ className: "", iconSize: [22, 29], iconAnchor: [11, 28], html: '<div class="pin pin--alt"></div>' }); }
   function nodeIcon() { return L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="mk mk--node"></div>' }); }
 
-  /* ---------- Layer state (master + per-property), mirrors desktop ---------- */
-  var on = { sites: true, alt: false, ring: {}, iso: {}, labor: {}, bench: {} };
-  var expanded = { sites: true, bench: false };
+  /* ---------- Layer state: pick which sites show, then global overlay toggles ---------- */
+  var on = { site: {}, alt: false, bench: {}, feat: { ring: true, iso: false, labor: false } };
   var panelOpen = false;
   function initState() {
     (D.nodes || []).forEach(function (n) { if (!(n.id in on.bench)) on.bench[n.id] = true; });
-    (D.sites || []).forEach(function (s) { if (!(s.id in on.ring)) on.ring[s.id] = true; if (!(s.id in on.iso)) on.iso[s.id] = false; if (!(s.id in on.labor)) on.labor[s.id] = false; });
+    (D.sites || []).forEach(function (s) { if (!(s.id in on.site)) on.site[s.id] = true; });
   }
-  function itemsFor(cat) { return cat === "bench" ? (D.nodes || []).map(function (n) { return n.id; }) : (D.sites || []).map(function (s) { return s.id; }); }
-  function catState(cat) { var items = itemsFor(cat); return { all: items.length && items.every(function (id) { return on[cat][id]; }), some: items.some(function (id) { return on[cat][id]; }) }; }
 
-  var refRing = {}, refIso = {}, refLabor = {}, refBench = {};
-  function clearRefs() { [refRing, refIso, refLabor, refBench].forEach(function (o) { Object.keys(o).forEach(function (k) { if (map.hasLayer(o[k])) map.removeLayer(o[k]); }); }); }
+  var refSite = {}, refRing = {}, refIso = {}, refLabor = {}, refBench = {};
+  function clearRefs() { [refSite, refRing, refIso, refLabor, refBench].forEach(function (o) { Object.keys(o).forEach(function (k) { if (map.hasLayer(o[k])) map.removeLayer(o[k]); }); }); }
   function buildLayers() {
-    clearRefs(); refRing = {}; refIso = {}; refLabor = {}; refBench = {};
-    groups.sites.clearLayers(); groups.alt.clearLayers();
+    clearRefs(); refSite = {}; refRing = {}; refIso = {}; refLabor = {}; refBench = {};
+    groups.alt.clearLayers();
     (D.sites || []).forEach(function (s, i) {
       if (!s.coords) return;
-      L.marker(s.coords, { icon: siteIcon(i) }).on("click", function () { openSite(s); }).addTo(groups.sites);
-      refRing[s.id] = L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 });
-      refLabor[s.id] = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
+      refSite[s.id] = L.marker(s.coords, { icon: siteIcon(i) }).on("click", function () { openSite(s); });
+      refRing[s.id] = L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.05 });
+      refLabor[s.id] = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.04 });
       var ig = L.layerGroup();
       (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false }).addTo(ig); });
       refIso[s.id] = ig;
@@ -83,11 +80,15 @@
   }
   function setVis(layer, show) { if (!layer) return; if (show) { if (!map.hasLayer(layer)) layer.addTo(map); } else if (map.hasLayer(layer)) map.removeLayer(layer); }
   function syncMap() {
-    setVis(groups.sites, on.sites); setVis(groups.alt, on.alt);
+    setVis(groups.alt, on.alt);
     Object.keys(refBench).forEach(function (id) { setVis(refBench[id], on.bench[id]); });
-    Object.keys(refRing).forEach(function (id) { setVis(refRing[id], on.ring[id]); });
-    Object.keys(refIso).forEach(function (id) { setVis(refIso[id], on.iso[id]); });
-    Object.keys(refLabor).forEach(function (id) { setVis(refLabor[id], on.labor[id]); });
+    Object.keys(refSite).forEach(function (id) {
+      var live = !!on.site[id];
+      setVis(refSite[id], live);
+      setVis(refRing[id], live && on.feat.ring);
+      setVis(refIso[id], live && on.feat.iso);
+      setVis(refLabor[id], live && on.feat.labor);
+    });
   }
 
   var didFit = false;
@@ -101,47 +102,32 @@
     buildPanel();
   }
 
-  /* ---------- Collapsible layers panel: master toggles + per-property expanders ---------- */
+  /* ---------- Collapsible layers panel: pick sites, flip global overlays ---------- */
   function shortNode(n) { return clean(n.name).replace(/\s*\(.*\)/, "").replace("Int’l", "").trim(); }
   function buildPanel() {
-    function simple(grp, label, onv, sw) { return '<label class="mlay__row"><input type="checkbox" data-grp="' + grp + '"' + (onv ? " checked" : "") + '><i class="mlay__sw mlay__sw--' + sw + '"></i><span>' + label + "</span></label>"; }
-    function cat(catk, label, sw, items) {
-      var st = catState(catk);
-      var main = '<div class="mlay__mainrow"><label class="mlay__row"><input type="checkbox" data-master="' + catk + '"' + (st.all ? " checked" : "") + '><i class="mlay__sw mlay__sw--' + sw + '"></i><span>' + label + '</span></label><button class="mlay__caret' + (expanded[catk] ? " is-open" : "") + '" data-expand="' + catk + '" aria-label="Per property">▾</button></div>';
-      var sub = expanded[catk] ? ('<div class="mlay__sub">' + items.map(function (it) { return '<label class="mlay__row mlay__row--sub"><input type="checkbox" data-item="' + catk + '" data-id="' + it.id + '"' + (on[catk][it.id] ? " checked" : "") + '><span>' + esc(it.label) + "</span></label>"; }).join("") + "</div>") : "";
-      return '<div class="mlay__cat">' + main + sub + "</div>";
-    }
-    var feat = [{ cat: "ring", label: "10-mile reach", sw: "ring" }, { cat: "iso", label: "Drive-time reach", sw: "iso" }, { cat: "labor", label: "Labor shed", sw: "labor" }];
-    function featChk(f, id) { return '<label class="mlay__row mlay__row--feat"><input type="checkbox" data-item="' + f.cat + '" data-id="' + id + '"' + (on[f.cat][id] ? " checked" : "") + '><i class="mlay__sw mlay__sw--' + f.sw + '"></i><span>' + f.label + "</span></label>"; }
-    function sitesBlock() {
-      var main = '<div class="mlay__mainrow"><label class="mlay__row"><input type="checkbox" data-grp="sites"' + (on.sites ? " checked" : "") + '><i class="mlay__sw mlay__sw--site"></i><span>Finalist sites</span></label><button class="mlay__caret' + (expanded.sites ? " is-open" : "") + '" data-expand="sites" aria-label="Per site">▾</button></div>';
-      var sub = expanded.sites ? ('<div class="mlay__sub">' + (D.sites || []).map(function (s, i) {
-        return '<div class="mlay__site"><div class="mlay__sitehd">' + (i + 1) + ". " + esc(s.city) + "</div>" + feat.map(function (f) { return featChk(f, s.id); }).join("") + "</div>";
-      }).join("") + "</div>") : "";
-      return '<div class="mlay__cat">' + main + sub + "</div>";
-    }
-    var nodes = (D.nodes || []).map(function (n) { return { id: n.id, label: shortNode(n) }; });
+    function row(attr, val, label, sw, onv) { return '<label class="mlay__row"><input type="checkbox" data-' + attr + '="' + val + '"' + (onv ? " checked" : "") + '><i class="mlay__sw mlay__sw--' + sw + '"></i><span>' + label + "</span></label>"; }
+    var siteRows = (D.sites || []).map(function (s, i) { return row("site", s.id, (i + 1) + ". " + esc(s.city), "site", on.site[s.id]); }).join("");
+    var featRows = row("feat", "ring", "10-mile reach", "ring", on.feat.ring) + row("feat", "iso", "Drive-time reach", "iso", on.feat.iso) + row("feat", "labor", "Labor shed", "labor", on.feat.labor);
+    var benchRows = (D.nodes || []).map(function (n) { return row("bench", n.id, esc(shortNode(n)), "node", on.bench[n.id]); }).join("");
     var body =
       '<div class="mlay__seg"><button class="mlay__segbtn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">◱ Map</button><button class="mlay__segbtn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">🛰 Satellite</button></div>' +
-      '<div class="mlay__group"><div class="mlay__title">On the map <span class="mlay__hint">▾ reach &amp; labor per site</span></div>' +
-        sitesBlock() +
-        simple("alt", "Also-considered", on.alt, "alt") +
-        cat("bench", "Benchmarks", "node", nodes) + "</div>";
+      '<div class="mlay__group"><div class="mlay__title">Sites on the map</div>' + siteRows + row("grp", "alt", "Also-considered", "alt", on.alt) + "</div>" +
+      '<div class="mlay__group"><div class="mlay__title">Overlays <span class="mlay__hint">apply to shown sites</span></div>' + featRows + "</div>" +
+      '<div class="mlay__group"><div class="mlay__title">Benchmarks</div>' + benchRows + "</div>";
     $("#mlayers").innerHTML =
       '<button class="mlay__fab' + (panelOpen ? " is-open" : "") + '" id="mlayFab">' + (panelOpen ? "✕ Close" : "☰ Layers") + "</button>" +
       '<div class="mlay__panel"' + (panelOpen ? "" : " hidden") + ">" + body + "</div>";
-    var be = document.querySelector('#mlayers [data-master="bench"]'); if (be) { var bs = catState("bench"); be.indeterminate = bs.some && !bs.all; }
   }
   $("#mlayers").addEventListener("click", function (e) {
     var fab = e.target.closest("#mlayFab"); if (fab) { panelOpen = !panelOpen; buildPanel(); return; }
     var bb = e.target.closest(".mlay__segbtn"); if (bb) { baseMode = bb.dataset.base; swapTiles(); buildPanel(); return; }
-    var cx = e.target.closest(".mlay__caret"); if (cx) { expanded[cx.dataset.expand] = !expanded[cx.dataset.expand]; buildPanel(); return; }
   });
   $("#mlayers").addEventListener("change", function (e) {
     var t = e.target; if (!t.dataset) return;
-    if (t.dataset.grp) { on[t.dataset.grp] = t.checked; syncMap(); }
-    else if (t.dataset.master) { var c = t.dataset.master; itemsFor(c).forEach(function (id) { on[c][id] = t.checked; }); syncMap(); buildPanel(); }
-    else if (t.dataset.item) { on[t.dataset.item][t.dataset.id] = t.checked; syncMap(); buildPanel(); }
+    if (t.dataset.site) { on.site[t.dataset.site] = t.checked; syncMap(); }
+    else if (t.dataset.feat) { on.feat[t.dataset.feat] = t.checked; syncMap(); }
+    else if (t.dataset.bench) { on.bench[t.dataset.bench] = t.checked; syncMap(); }
+    else if (t.dataset.grp === "alt") { on.alt = t.checked; syncMap(); }
   });
 
   /* Bottom sheet */
