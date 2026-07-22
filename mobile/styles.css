@@ -77,6 +77,21 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .quad--o { border-left: 3px solid var(--accent); } .quad--t { border-left: 3px solid var(--warn); }
 .list-clean { margin: 0; padding-left: 18px; } .list-clean li { margin-bottom: 8px; color: var(--ink-2); }
 
+/* CBRE logo (mobile) */
+.cbre-logo { display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 8px; border-radius: 5px; background: var(--accent-strong); color: #fff; font-family: var(--font-display); font-weight: 800; letter-spacing: 0.07em; font-size: 0.95rem; }
+:root[data-theme="dark"] .cbre-logo { color: #04140E; }
+.mhead__client { color: var(--ink-muted); font-size: 0.9rem; }
+.mhead__client b { color: var(--ink); }
+
+/* rent chip + shed chips */
+.rentchip { display: flex; align-items: baseline; gap: 8px; margin: 8px 0 4px; }
+.rentchip strong { font-family: var(--font-display); font-size: 1.3rem; color: var(--accent-strong); }
+.chip-toggle--shed.is-on { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.chk__lbl { flex: 1; }
+.chk__ico--rfd { background: var(--surface-3); color: var(--ink-muted); }
+.chk--rfd { color: var(--ink-muted); }
+.chk__note { margin-left: auto; font-style: normal; font-size: 0.68rem; color: var(--warn); background: var(--warn-soft); padding: 2px 7px; border-radius: 100px; white-space: nowrap; }
+
 /* criteria checklist */
 .chk { list-style: none; margin: 0; padding: 0; }
 .chk li { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 0.9rem; color: var(--ink-2); border-bottom: 1px solid var(--line); }

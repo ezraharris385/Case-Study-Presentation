@@ -18,14 +18,13 @@
   <!-- ===== Top bar ===== -->
   <header class="topbar">
     <div class="brand">
-      <div class="brand__mark" aria-hidden="true"></div>
+      <div class="cbre-logo" aria-label="CBRE">CBRE</div>
       <div class="brand__text">
-        <span class="brand__firm" id="firmName">Your Firm</span>
-        <span class="brand__eng" id="engLine">Site Selection</span>
+        <span class="brand__firm" id="engLine">Site Selection</span>
+        <span class="brand__eng">Prepared for <b id="clientName">ColdFresh</b></span>
       </div>
     </div>
     <div class="topbar__meta">
-      <span class="pill" id="clientPill">Client</span>
       <span class="eyebrow" id="asOf">As of —</span>
       <button class="btn btn--ghost btn--sm" id="openLoader">＋ Load data</button>
       <button class="icon-btn" id="themeToggle" title="Toggle light / dark" aria-label="Toggle theme">◐</button>
@@ -49,32 +48,28 @@
       <button class="navitem" data-view="drive"><span class="navitem__ico">↝</span>Drive distances</button>
       <button class="navitem" data-view="labor"><span class="navitem__ico">☰</span>Labor forces</button>
       <button class="navitem" data-view="demographics"><span class="navitem__ico">▤</span>Demographics</button>
-      <button class="navitem" data-view="criteria"><span class="navitem__ico">◧</span>Criteria scores</button>
+      <div class="navgroup eyebrow">Deal</div>
+      <button class="navitem" data-view="incentives"><span class="navitem__ico">◈</span>Incentives</button>
+      <button class="navitem" data-view="lease"><span class="navitem__ico">§</span>Lease terms</button>
       <div class="navgroup eyebrow">Client</div>
       <button class="navitem navitem--cta" data-view="survey"><span class="navitem__ico">✎</span>Take-home survey</button>
+      <div class="sidenav__foot">
+        Market data via CoStar. Aerials via Esri. Educational CBRE internship case study — illustrative only, not for redistribution.
+      </div>
     </nav>
 
     <!-- Map hero -->
     <main class="stage">
       <div id="map" class="map"></div>
 
-      <!-- Floating layer control -->
-      <div class="layers" id="layers">
-        <div class="layers__title eyebrow">Map layers</div>
-        <label class="layers__row"><input type="checkbox" id="lyr-sites" checked /> <span>Finalist sites</span></label>
-        <label class="layers__row"><input type="checkbox" id="lyr-rings" checked /> <span>10-mile reach</span></label>
-        <label class="layers__row"><input type="checkbox" id="lyr-nodes" checked /> <span>Logistics nodes</span></label>
-        <label class="layers__row"><input type="checkbox" id="lyr-labor" /> <span>Labor shed</span></label>
-        <label class="layers__row"><input type="checkbox" id="lyr-alt" checked /> <span>Also-considered</span></label>
-        <label class="layers__row" id="lyr-demo-row" hidden><input type="checkbox" id="lyr-demo" checked /> <span id="lyr-demo-label">Demographics</span></label>
-      </div>
-      <div class="demo-legend" id="demoLegend" hidden></div>
+      <!-- Floating layer control (built by app.js) -->
+      <div class="layers" id="layers"></div>
 
       <!-- Map legend -->
       <div class="legend" id="legend">
         <span><i class="dot dot--site"></i>Finalist</span>
         <span><i class="dot dot--alt"></i>Also-considered</span>
-        <span><i class="dot dot--node"></i>Logistics node</span>
+        <span><i class="dot dot--node"></i>Benchmark</span>
       </div>
     </main>
 

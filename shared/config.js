@@ -3,7 +3,7 @@
    ============================================================ */
 window.CASE_CONFIG = {
   // ---- Branding (shown in header) ----
-  firmName: "Your Firm",                 // your brokerage / team name  <-- set this
+  firmName: "CBRE",                      // brokerage / team
   clientName: "ColdFresh",               // the (fictional) client company
   engagementLine: "Site Selection — Greater Chicago Cold Storage",
   asOfDate: "July 2026",                 // "as of" date shown on data
@@ -18,6 +18,9 @@ window.CASE_CONFIG = {
     tilesLight: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
     tilesDark: "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
     attribution: "&copy; OpenStreetMap &copy; CARTO",
+    // Aerial basemap (no CoStar imagery used). Esri World Imagery — free with attribution.
+    tilesSatellite: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attributionSatellite: "Imagery &copy; Esri, Maxar, Earthstar Geographics",
     reachMiles: 10,           // "10-mile reach" ring radius
   },
 
@@ -27,9 +30,9 @@ window.CASE_CONFIG = {
   //   "formspree" : Formspree endpoint (zero-code alternative)
   //   ""          : disabled — survey shows results locally only
   survey: {
-    mode: "",                // set to "appscript" or "formspree" once configured
-    endpoint: "",            // paste your deployed web-app URL / Formspree URL here
-    consentNote: "Your responses are shared with the deal team to tailor the search. No personal data required.",
+    mode: "formspree",       // Formspree emails each submission to you
+    endpoint: "",            // paste your Formspree form URL here: https://formspree.io/f/xxxxx
+    consentNote: "Your feedback goes to the CBRE deal team. No personal data required.",
   },
 
   // ---- Auto-load data files from the /data folder on startup ----

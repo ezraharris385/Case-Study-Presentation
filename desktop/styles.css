@@ -125,6 +125,25 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .score-fill { display: block; height: 100%; border-radius: 100px; background: var(--accent); }
 .score-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 
+/* CBRE logo */
+.cbre-logo { display: inline-flex; align-items: center; justify-content: center; height: 30px; padding: 0 9px; border-radius: 5px; background: var(--accent-strong); color: #fff; font-family: var(--font-display); font-weight: 800; letter-spacing: 0.08em; font-size: 1.05rem; }
+:root[data-theme="dark"] .cbre-logo { color: #04140E; }
+
+/* Sidebar footer / disclaimer */
+.sidenav { display: flex; flex-direction: column; }
+.sidenav__foot { margin-top: auto; padding: 12px 8px 4px; font-size: 0.68rem; line-height: 1.45; color: var(--ink-muted); border-top: 1px solid var(--line); }
+
+/* Basemap switch + granular layer toggles */
+.layers { max-height: calc(100% - 28px); overflow-y: auto; }
+.basemap { display: flex; gap: 6px; margin: 6px 0 4px; }
+.basemap__btn { flex: 1; padding: 6px 8px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); border-radius: 6px; font-size: 0.78rem; cursor: pointer; }
+.basemap__btn.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 600; }
+.layers__row--sub { padding-left: 6px; font-size: 0.82rem; }
+
+/* Rent chip */
+.rentchip { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 4px; }
+.rentchip strong { font-family: var(--font-display); font-size: 1.45rem; color: var(--accent-strong); }
+
 /* Criteria checklist */
 .chk { list-style: none; margin: 0; padding: 0; }
 .chk li { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 0.88rem; color: var(--ink-2); border-bottom: 1px solid var(--line); }
@@ -132,6 +151,10 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .chk__ico { width: 20px; height: 20px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.72rem; font-weight: 700; flex: 0 0 auto; }
 .chk--met > .chk__ico, .chk__ico.chk--met { background: var(--good-soft); color: var(--good); }
 .chk--confirm > .chk__ico, .chk__ico.chk--confirm { background: var(--warn-soft); color: var(--warn); }
+.chk__lbl { flex: 1; }
+.chk__ico--rfd { background: var(--surface-3); color: var(--ink-muted); }
+.chk--rfd { color: var(--ink-muted); }
+.chk__note { margin-left: auto; font-style: normal; font-size: 0.7rem; color: var(--warn); background: var(--warn-soft); padding: 2px 8px; border-radius: 100px; white-space: nowrap; }
 
 .prosCons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .prosCons ul { margin: 6px 0 0; padding-left: 16px; font-size: 0.85rem; color: var(--ink-2); }

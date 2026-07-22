@@ -10,7 +10,7 @@ window.CASE_DATA = {
       },
       {
         "label": "Cold storage",
-        "value": "40,000 SF of cold storage"
+        "value": "~40,000 SF cold storage (build-out; none are existing cold facilities)"
       },
       {
         "label": "Transportation & logistics",
@@ -97,13 +97,19 @@ window.CASE_DATA = {
       "sprinklers": "ESFR",
       "owner": null,
       "yearBuilt": 2024,
-      "rent": {
-        "base": 11.3,
-        "addl": 5.63,
-        "allIn": 16.93
-      },
-      "criteriaMet": 8,
-      "criteriaTotal": 10,
+      "rentDisplay": "$8–10 NNN",
+      "incentives": [
+        "Cook County Class 6b property-tax incentive (likely eligible)",
+        "Illinois EDGE credit — jobs-based (if thresholds met)",
+        "Village of Arlington Heights incentives (explore)"
+      ],
+      "leaseTerms": [
+        "Lease structure",
+        "Rent escalations",
+        "Expansion rights",
+        "Direct metering",
+        "Temperature guarantees"
+      ],
       "checklist": [
         {
           "label": "60,000–75,000 SF",
@@ -210,13 +216,19 @@ window.CASE_DATA = {
       "sprinklers": "ESFR",
       "owner": "Morgan Stanley & Co. LLC",
       "yearBuilt": 2015,
-      "rent": {
-        "base": 10.6,
-        "addl": 3.29,
-        "allIn": 13.88
-      },
-      "criteriaMet": 8,
-      "criteriaTotal": 10,
+      "rentDisplay": "$9–11 Industrial Gross",
+      "incentives": [
+        "Cook County Class 6b property-tax incentive (likely eligible)",
+        "Illinois EDGE credit — jobs-based (if thresholds met)",
+        "City of Des Plaines TIF / local incentives (explore)"
+      ],
+      "leaseTerms": [
+        "Expense caps",
+        "Direct metering",
+        "Power cost structure",
+        "Rent escalations",
+        "Audit rights"
+      ],
       "checklist": [
         {
           "label": "60,000–75,000 SF",
@@ -323,13 +335,19 @@ window.CASE_DATA = {
       "sprinklers": "ESFR",
       "owner": "MWI Property Group",
       "yearBuilt": 2022,
-      "rent": {
-        "base": 9.6,
-        "addl": 11.23,
-        "allIn": 20.83
-      },
-      "criteriaMet": 8,
-      "criteriaTotal": 10,
+      "rentDisplay": "$9–11 NNN",
+      "incentives": [
+        "Cook County Class 6b property-tax incentive (likely eligible)",
+        "Illinois EDGE credit — jobs-based (if thresholds met)",
+        "Village of Palatine incentives (explore)"
+      ],
+      "leaseTerms": [
+        "Lease structure",
+        "Rent escalations",
+        "Expansion rights",
+        "Code compliance",
+        "Temperature guarantees"
+      ],
       "checklist": [
         {
           "label": "60,000–75,000 SF",
@@ -760,12 +778,8 @@ window.CASE_DATA = {
       ]
     }
   ],
-  "tcoAssumptions": {
-    "termYears": 5,
-    "note": ""
-  },
   "survey": {
-    "intro": "Two minutes to sharpen the search. Tell us what matters most for this facility.",
+    "intro": "Two minutes to sharpen the search. Tell us what matters most.",
     "questions": [
       {
         "id": "role",
@@ -779,39 +793,13 @@ window.CASE_DATA = {
         "type": "rank",
         "label": "Rank what matters most",
         "options": [
-          "Cold-storage readiness",
+          "Cold-storage build-out potential",
           "Labor availability",
           "Proximity to O’Hare",
           "Occupancy cost",
-          "Speed to occupancy",
-          "Power capacity"
+          "Power capacity",
+          "Speed to occupancy"
         ]
-      },
-      {
-        "id": "temp",
-        "type": "choice",
-        "label": "Primary temperature profile",
-        "options": [
-          "Mostly freezer",
-          "Mostly cooler",
-          "Balanced",
-          "Not sure yet"
-        ]
-      },
-      {
-        "id": "timeline",
-        "type": "choice",
-        "label": "How urgent is occupancy?",
-        "options": [
-          "ASAP (<12 mo)",
-          "12–18 months",
-          "Flexible"
-        ]
-      },
-      {
-        "id": "favorite",
-        "type": "site",
-        "label": "Which site feels right so far?"
       },
       {
         "id": "notes",

@@ -36,61 +36,67 @@
   /* Map */
   var map = L.map("map", { center: CFG.map.center, zoom: CFG.map.zoom, minZoom: CFG.map.minZoom, maxZoom: CFG.map.maxZoom, zoomControl: false });
   L.control.zoom({ position: "topright" }).addTo(map);
+  var baseMode = "street";
   var tileLayer = null;
-  function swapTiles() { if (tileLayer) map.removeLayer(tileLayer); tileLayer = L.tileLayer(currentDark() ? CFG.map.tilesDark : CFG.map.tilesLight, { attribution: CFG.map.attribution, maxZoom: CFG.map.maxZoom, detectRetina: true }).addTo(map); }
+  function swapTiles() {
+    if (tileLayer) map.removeLayer(tileLayer);
+    var url, attr, maxZ = CFG.map.maxZoom;
+    if (baseMode === "satellite") { url = CFG.map.tilesSatellite; attr = CFG.map.attributionSatellite; maxZ = 18; }
+    else { url = currentDark() ? CFG.map.tilesDark : CFG.map.tilesLight; attr = CFG.map.attribution; }
+    tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true }).addTo(map);
+  }
   swapTiles();
-  var layers = { demo: L.layerGroup(), sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), nodes: L.layerGroup().addTo(map), labor: L.layerGroup(), alt: L.layerGroup() };
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: L.layerGroup() };
+  var groupToggles = { rings: true, alt: false };
+  var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
   function siteIcon(i) { return L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 32], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
   function altIcon() { return L.divIcon({ className: "", iconSize: [24, 24], iconAnchor: [12, 12], html: '<div class="mk mk--alt">◇</div>' }); }
   function nodeIcon() { return L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="mk mk--node"></div>' }); }
 
-  function renderDemographics() {
-    var demo = D.demographics; if (!demo) return;
-    var metric = demo.metric || LDR.pickDemoMetric(demo.points, demo.geojson);
-    var accent = css("--accent"), accentStrong = css("--accent-strong");
-    var chip = $("#chip-demo"); if (chip) chip.textContent = "Demographics" + (metric ? " · " + metric : "");
-    if (demo.points && demo.points.length) {
-      var max = Math.max.apply(null, demo.points.map(function (p) { return p.metrics[metric] || 0; })) || 1;
-      demo.points.forEach(function (p) {
-        var v = p.metrics[metric] || 0, r = 6 + 20 * Math.sqrt(v / max);
-        var tip = "<strong>" + esc(p.name) + "</strong>" + Object.keys(p.metrics).map(function (k) { return "<br>" + esc(k) + ": " + fmt(p.metrics[k]); }).join("");
-        L.circleMarker(p.coords, { radius: r, color: accentStrong, weight: 1, fillColor: accent, fillOpacity: 0.45 }).bindTooltip(tip, { direction: "top", sticky: true }).addTo(layers.demo);
-      });
-    } else if (demo.geojson) {
-      var props = (demo.geojson.features || []).map(function (f) { return (f.properties || {})[metric] || 0; });
-      var mx = Math.max.apply(null, props) || 1, mn = Math.min.apply(null, props) || 0;
-      L.geoJSON(demo.geojson, { style: function (f) { var v = (f.properties || {})[metric] || 0, t = (v - mn) / (mx - mn || 1); return { color: accentStrong, weight: 1, fillColor: accent, fillOpacity: 0.12 + 0.6 * t }; },
-        onEachFeature: function (f, lyr) { var pr = f.properties || {}; lyr.bindTooltip(Object.keys(pr).map(function (k) { return esc(k) + ": " + fmt(pr[k]); }).join("<br>"), { sticky: true }); } }).addTo(layers.demo);
-    }
-  }
-
   var didFit = false;
   function renderMap(opts) {
     opts = opts || {};
-    Object.keys(layers).forEach(function (k) { layers[k].clearLayers(); });
+    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers();
+    Object.keys(benchmarkMk).forEach(function (id) { if (map.hasLayer(benchmarkMk[id])) map.removeLayer(benchmarkMk[id]); });
+    Object.keys(laborCircle).forEach(function (id) { if (map.hasLayer(laborCircle[id])) map.removeLayer(laborCircle[id]); });
+    benchmarkMk = {}; laborCircle = {};
     (D.sites || []).forEach(function (s, i) {
       if (!s.coords) return;
-      L.marker(s.coords, { icon: siteIcon(i) }).on("click", function () { openSite(s); }).addTo(layers.sites);
-      L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 }).addTo(layers.rings);
-      L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 }).addTo(layers.labor);
+      L.marker(s.coords, { icon: siteIcon(i) }).on("click", function () { openSite(s); }).addTo(groups.sites);
+      L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 }).addTo(groups.rings);
+      if (!(s.id in laborOn)) laborOn[s.id] = false;
+      var lc = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
+      laborCircle[s.id] = lc; if (laborOn[s.id]) lc.addTo(map);
     });
-    (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon() }).on("click", function () { openAlt(s); }).addTo(layers.alt); });
-    (D.nodes || []).forEach(function (n) { L.marker(n.coords, { icon: nodeIcon() }).bindTooltip(esc(n.name), { direction: "top" }).addTo(layers.nodes); });
-
-    var chip = $("#chip-demo");
-    if (D.demographics) { chip.hidden = false; renderDemographics(); if (chip.classList.contains("is-on") && !map.hasLayer(layers.demo)) layers.demo.addTo(map); }
-    else { chip.hidden = true; if (map.hasLayer(layers.demo)) map.removeLayer(layers.demo); }
-
+    (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon() }).on("click", function () { openAlt(s); }).addTo(groups.alt); });
+    (D.nodes || []).forEach(function (n) {
+      if (!(n.id in benchmarkOn)) benchmarkOn[n.id] = true;
+      var mk = L.marker(n.coords, { icon: nodeIcon() }).bindTooltip(esc(clean(n.name)), { direction: "top" });
+      benchmarkMk[n.id] = mk; if (benchmarkOn[n.id]) mk.addTo(map);
+    });
     var pts = (D.sites || []).filter(function (s) { return s.coords; }).map(function (s) { return s.coords; })
       .concat((D.alsoConsidered || []).filter(function (s) { return s.coords; }).map(function (s) { return s.coords; }));
-    if (D.demographics && D.demographics.points) pts = pts.concat(D.demographics.points.map(function (p) { return p.coords; }));
     if (opts.fit !== false && pts.length) { try { map.fitBounds(L.latLngBounds(pts).pad(0.2)); didFit = true; } catch (e) {} }
     setTimeout(function () { map.invalidateSize(); }, 60);
+    buildChips();
   }
 
-  Array.prototype.forEach.call(document.querySelectorAll(".chip-toggle"), function (c) {
-    c.addEventListener("click", function () { var grp = layers[c.dataset.layer]; if (!grp) return; var on = c.classList.toggle("is-on"); on ? grp.addTo(map) : map.removeLayer(grp); });
+  function shortNode(n) { return clean(n.name).replace(/\s*\(.*\)/, "").replace("Int’l", "").trim(); }
+  function buildChips() {
+    var c = '<button class="chip-toggle' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="1">🛰 Satellite</button>';
+    c += '<button class="chip-toggle' + (groupToggles.rings ? " is-on" : "") + '" data-grp="rings">10-mi</button>';
+    c += '<button class="chip-toggle' + (groupToggles.alt ? " is-on" : "") + '" data-grp="alt">Others</button>';
+    (D.nodes || []).forEach(function (n) { c += '<button class="chip-toggle' + (benchmarkOn[n.id] ? " is-on" : "") + '" data-bench="' + n.id + '">' + esc(shortNode(n)) + "</button>"; });
+    (D.sites || []).forEach(function (s) { c += '<button class="chip-toggle chip-toggle--shed' + (laborOn[s.id] ? " is-on" : "") + '" data-shed="' + s.id + '">◱ ' + esc(s.city) + "</button>"; });
+    $("#mlayers").innerHTML = c;
+  }
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest("#mlayers .chip-toggle"); if (!c) return;
+    if (c.dataset.base) { baseMode = baseMode === "satellite" ? "street" : "satellite"; swapTiles(); buildChips(); }
+    else if (c.dataset.grp) { var g = c.dataset.grp; groupToggles[g] = !groupToggles[g]; groupToggles[g] ? groups[g].addTo(map) : map.removeLayer(groups[g]); buildChips(); }
+    else if (c.dataset.bench) { var id = c.dataset.bench; benchmarkOn[id] = !benchmarkOn[id]; var mk = benchmarkMk[id]; if (mk) { benchmarkOn[id] ? mk.addTo(map) : map.removeLayer(mk); } buildChips(); }
+    else if (c.dataset.shed) { var sid = c.dataset.shed; laborOn[sid] = !laborOn[sid]; var lc = laborCircle[sid]; if (lc) { laborOn[sid] ? lc.addTo(map) : map.removeLayer(lc); } buildChips(); }
   });
 
   /* Bottom sheet */
@@ -99,20 +105,21 @@
   function closeSheet() { sheet.hidden = true; scrim.hidden = true; }
   scrim.addEventListener("click", closeSheet); $("#sheetGrab").addEventListener("click", closeSheet);
 
-  function renderChecklist(list) { if (!list || !list.length) return ""; return '<ul class="chk">' + list.map(function (c) { return '<li class="chk--' + c.status + '"><span class="chk__ico">' + (c.status === "met" ? "✓" : "?") + "</span>" + esc(c.label) + "</li>"; }).join("") + "</ul>"; }
+  function renderChecklist(list) { if (!list || !list.length) return ""; return '<ul class="chk">' + list.map(function (c) { return c.status === "met" ? '<li class="chk--met"><span class="chk__ico">✓</span><span class="chk__lbl">' + esc(c.label) + "</span></li>" : '<li class="chk--rfd"><span class="chk__ico chk__ico--rfd">–</span><span class="chk__lbl">' + esc(c.label) + '</span><em class="chk__note">requires further diligence</em></li>'; }).join("") + "</ul>"; }
   function demoMini(s) { var d = s.demo; if (!d) return ""; return '<div class="d-section"><h4>10-mile demographics</h4><dl class="kv">' + kv("Population", fmt(d.pop10mi)) + kv("Median HH income", d.medHHinc ? "$" + fmt(d.medHHinc) : "—") + kv("Labor force", fmt(d.laborForce)) + kv("Unemployment", d.unemploymentPct != null ? d.unemploymentPct + "%" : "—") + kv("Transp/whse jobs", fmt(d.twEmployment)) + kv("Bachelor’s+", d.bachelorsPlusPct != null ? d.bachelorsPlusPct + "%" : "—") + "</dl></div>"; }
   function kv(k, v) { return "<dt>" + esc(k) + "</dt><dd>" + esc(v == null ? "—" : v) + "</dd>"; }
 
   function openSite(s) {
     var drive = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join("");
     openSheet('<h2>' + esc(clean(s.name)) + "</h2><div class=\"d-sub\">" + esc(s.address || "") + " · " + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
-      (s.criteriaMet != null ? '<div class="score-head"><span class="score-big num">' + s.criteriaMet + '</span><span class="eyebrow">of ' + s.criteriaTotal + " criteria confirmed</span></div>" : "") +
-      (s.rent ? '<div class="d-section"><h4>Occupancy cost (NNN)</h4><dl class="kv">' + kv("Base rent", s.rent.base != null ? "$" + s.rent.base.toFixed(2) : "—") + kv("Opex + taxes", s.rent.addl != null ? "$" + s.rent.addl.toFixed(2) : "—") + "<dt><strong>All-in</strong></dt><dd><strong>$" + (s.rent.allIn != null ? s.rent.allIn.toFixed(2) : "—") + " /SF</strong></dd></dl></div>" : "") +
+      (s.rentDisplay ? '<div class="rentchip"><span class="eyebrow">Asking rent</span><strong>' + esc(s.rentDisplay) + "</strong></div>" : "") +
       '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' + kv("Status", s.status) + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Drive-in", s.driveIns) + kv("Power", s.power) + kv("Year built", s.yearBuilt) + "</dl></div>" +
-      '<div class="d-section"><h4>Client criteria</h4>' + renderChecklist(s.checklist) + "</div>" +
-      (drive ? '<div class="d-section"><h4>Drive distances</h4><table class="table"><tbody>' + drive + "</tbody></table></div>" : "") +
+      '<div class="d-section"><h4>Site characteristics</h4>' + renderChecklist(s.checklist) + "</div>" +
+      ((s.incentives && s.incentives.length) ? '<div class="d-section"><h4>Incentives <span class="form-note">(high level)</span></h4><ul class="list-clean">' + s.incentives.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>" : "") +
+      ((s.leaseTerms && s.leaseTerms.length) ? '<div class="d-section"><h4>Lease terms to prioritize</h4><div class="chips">' + s.leaseTerms.map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div></div>" : "") +
+      (drive ? '<div class="d-section"><h4>Drive to benchmarks</h4><table class="table"><tbody>' + drive + "</tbody></table></div>" : "") +
       demoMini(s));
-    if (s.coords) map.setView(s.coords, 11, { animate: true });
+    if (s.coords) map.setView(s.coords, 13, { animate: true });
   }
   function openAlt(s) { openSheet('<h2>' + esc(clean(s.name)) + '</h2><div class="d-sub">' + esc(s.address || "") + (s.city ? " · " + esc(s.city) : "") + " · also-considered</div><dl class=\"kv\">" + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Power", s.power) + "</dl><p class=\"form-note\" style=\"margin-top:10px\">Screened; not shortlisted to the final three.</p>"); if (s.coords) map.setView(s.coords, 11, { animate: true }); }
 
@@ -127,7 +134,7 @@
   /* Sites list */
   function renderSitesList() {
     $("#sitesList").innerHTML = '<div class="sec-title">Finalist sites</div>' + (D.sites || []).map(function (s, i) {
-      return '<button class="mcard" data-site="' + i + '"><div class="mcard__top"><span class="mcard__name">' + (i + 1) + ". " + esc(clean(s.name)) + '</span>' + (s.criteriaMet != null ? '<span class="mcard__score num" style="font-size:1.2rem">' + s.criteriaMet + "/" + s.criteriaTotal + "</span>" : "") + '</div><div class="mcard__sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + '</div><div class="mcard__row">' + (s.rent && s.rent.allIn != null ? '<span class="pill">$' + s.rent.allIn.toFixed(2) + " NNN</span>" : "") + (s.sizeSF ? '<span class="pill">' + (s.sizeSF / 1000).toFixed(0) + "k SF</span>" : "") + "</div></button>";
+      return '<button class="mcard" data-site="' + i + '"><div class="mcard__top"><span class="mcard__name">' + (i + 1) + ". " + esc(clean(s.name)) + '</span></div><div class="mcard__sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + '</div><div class="mcard__row">' + (s.rentDisplay ? '<span class="pill pill--accent">' + esc(s.rentDisplay) + "</span>" : "") + (s.availSF ? '<span class="pill">' + (s.availSF / 1000).toFixed(0) + "k SF avail</span>" : "") + "</div></button>";
     }).join("") + ((D.alsoConsidered && D.alsoConsidered.length) ? ('<div class="sec-title" style="margin-top:18px">Also considered</div>' + D.alsoConsidered.map(function (s, i) { return '<button class="mcard" data-alt="' + i + '"><div class="mcard__top"><span class="mcard__name">' + esc(clean(s.name)) + '</span><span class="pill pill--alt">not selected</span></div><div class="mcard__sub">' + esc(s.city) + "</div></button>"; }).join("")) : "");
   }
   $("#sitesList").addEventListener("click", function (e) { var s = e.target.closest("[data-site]"), a = e.target.closest("[data-alt]"); if (s) openSite(D.sites[+s.dataset.site]); else if (a) openAlt(D.alsoConsidered[+a.dataset.alt]); });
@@ -138,11 +145,8 @@
     var legend = function () { return '<p class="form-note">' + sites.map(function (s, i) { return (i + 1) + " = " + esc(s.city); }).join(" · ") + "</p>"; };
     return [
       { t: "Client needs", h: function () { var r = (D.needs.requirements || []).map(function (x) { return "<tr><td>" + esc(x.label) + "</td><td>" + esc(x.value) + "</td></tr>"; }).join(""); return '<table class="table"><tbody>' + r + "</tbody></table>"; } },
-      { t: "Site criteria", h: function () {
-        var rows = D.criteria.map(function (c, ci) { var cells = sites.map(function (s) { var st = (s.checklist && s.checklist[ci]) ? s.checklist[ci].status : null; return '<td class="num">' + (st === "met" ? '<span class="chk__ico chk--met">✓</span>' : st === "confirm" ? '<span class="chk__ico chk--confirm">?</span>' : "—") + "</td>"; }).join(""); return "<tr><td>" + esc(c.label) + "</td>" + cells + "</tr>"; }).join("");
-        var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + "</th>"; }).join("");
-        return '<table class="table"><thead><tr><th>Criterion</th>' + heads + "</tr></thead><tbody>" + rows + "</tbody></table>" + legend();
-      } },
+      { t: "Incentives", h: function () { return sites.map(function (s, i) { return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(s.city) + '</h5><ul class="list-clean">' + (s.incentives || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; }).join("") + '<p class="form-note">Cook County (Class 6b territory) — subject to application.</p>'; } },
+      { t: "Lease terms to prioritize", h: function () { return sites.map(function (s, i) { return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(s.city) + ' <span class="form-note">· ' + esc(s.rentDisplay || "") + '</span></h5><div class="chips">' + (s.leaseTerms || []).map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div>"; }).join(""); } },
       { t: "Demographics (10-mi)", h: function () {
         if (!sites.length || !sites[0].demo) return '<p class="form-note">No demographics.</p>';
         var metrics = [["Population", "pop10mi", fmt], ["Median HH inc", "medHHinc", function (v) { return "$" + fmt(v); }], ["Labor force", "laborForce", fmt], ["Unemployment", "unemploymentPct", function (v) { return v + "%"; }], ["Transp/whse jobs", "twEmployment", fmt], ["Bachelor’s+", "bachelorsPlusPct", function (v) { return v + "%"; }]];
@@ -150,12 +154,12 @@
         var rows = metrics.map(function (m) { var cells = sites.map(function (s) { return '<td class="num">' + (s.demo[m[1]] != null ? m[2](s.demo[m[1]]) : "—") + "</td>"; }).join(""); return "<tr><td>" + m[0] + "</td>" + cells + "</tr>"; }).join("");
         return '<table class="table"><thead><tr><th>Metric</th>' + heads + "</tr></thead><tbody>" + rows + "</tbody></table>" + legend();
       } },
-      { t: "Drive distances", h: function () { return sites.map(function (s, i) { var rows = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join(""); return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(clean(s.name)) + "</h5>" + (rows ? '<table class="table"><tbody>' + rows + "</tbody></table>" : ""); }).join(""); } },
+      { t: "Drive to benchmarks", h: function () { return sites.map(function (s, i) { var rows = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join(""); return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(clean(s.name)) + "</h5>" + (rows ? '<table class="table"><tbody>' + rows + "</tbody></table>" : ""); }).join(""); } },
       { t: "Labor forces", h: function () { var rows = sites.map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + '</td><td class="num">' + (l.workforce ? fmt(l.workforce) : "—") + '</td><td class="num">' + (l.twEmployment ? fmt(l.twEmployment) : "—") + '</td><td class="num">' + esc(l.unemployment || "—") + "</td></tr>"; }).join(""); return '<table class="table"><thead><tr><th>Site</th><th class="num">Labor force</th><th class="num">T&amp;W jobs</th><th class="num">Unemp</th></tr></thead><tbody>' + rows + "</tbody></table>"; } },
     ];
   }
   function renderInfo() {
-    $("#infoMount").innerHTML = '<div class="sec-title">The case</div>' + infoSections().map(function (s, i) { return '<div class="acc" data-acc="' + i + '"><button class="acc__head">' + esc(s.t) + '<span class="caret">›</span></button><div class="acc__body">' + s.h() + "</div></div>"; }).join("");
+    $("#infoMount").innerHTML = '<div class="sec-title">The case</div>' + infoSections().map(function (s, i) { return '<div class="acc" data-acc="' + i + '"><button class="acc__head">' + esc(s.t) + '<span class="caret">›</span></button><div class="acc__body">' + s.h() + "</div></div>"; }).join("") + '<p class="form-note" style="margin-top:16px;line-height:1.5">Market data via CoStar. Aerials via Esri. Educational CBRE internship case study — illustrative only, not for redistribution.</p>';
   }
   $("#infoMount").addEventListener("click", function (e) { var head = e.target.closest(".acc__head"); if (head) head.parentElement.classList.toggle("is-open"); });
 

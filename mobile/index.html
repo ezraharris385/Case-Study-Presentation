@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
   <title>Cold-Chain Site Cockpit</title>
   <meta name="description" content="Explore the cold-storage site search on your phone." />
-  <meta name="theme-color" content="#0E8C9E" />
+  <meta name="theme-color" content="#00402D" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,8 +18,8 @@
 <body>
   <header class="mhead">
     <div class="mhead__brand">
-      <span class="mhead__mark" aria-hidden="true"></span>
-      <span class="mhead__client" id="clientName">Client</span>
+      <span class="cbre-logo">CBRE</span>
+      <span class="mhead__client">for <b id="clientName">ColdFresh</b></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="icon-btn" id="openLoader" aria-label="Load data">＋</button>
@@ -33,13 +33,7 @@
     <!-- MAP tab -->
     <section class="tabview is-active" id="tab-map">
       <div id="map" class="map"></div>
-      <div class="mlayers" id="mlayers">
-        <button class="chip-toggle is-on" data-layer="rings">10-mi reach</button>
-        <button class="chip-toggle is-on" data-layer="nodes">Nodes</button>
-        <button class="chip-toggle is-on" data-layer="demo" id="chip-demo" hidden>Demographics</button>
-        <button class="chip-toggle" data-layer="labor">Labor shed</button>
-        <button class="chip-toggle" data-layer="alt">Also-considered</button>
-      </div>
+      <div class="mlayers" id="mlayers"></div>
     </section>
 
     <!-- SITES tab -->

@@ -19,11 +19,10 @@
   var currentView = "map";
 
   /* ---------- Branding + chrome ---------- */
-  $("#firmName").textContent = CFG.firmName;
   $("#engLine").textContent = CFG.engagementLine;
-  $("#clientPill").textContent = CFG.clientName;
+  $("#clientName").textContent = CFG.clientName;
   $("#asOf").textContent = "As of " + CFG.asOfDate;
-  document.title = CFG.clientName + " — Site Cockpit";
+  document.title = "CBRE · " + CFG.clientName + " — Site Cockpit";
   function refreshBanner() {
     var b = $("#sampleBanner");
     if (!userLoaded && D.sampleData === false) { b.hidden = true; return; }
@@ -47,104 +46,83 @@
 
   /* ---------- Map skeleton ---------- */
   var map = L.map("map", { center: CFG.map.center, zoom: CFG.map.zoom, minZoom: CFG.map.minZoom, maxZoom: CFG.map.maxZoom });
+  var baseMode = "street";
   var tileLayer = null;
   function swapTiles() {
     if (tileLayer) map.removeLayer(tileLayer);
-    tileLayer = L.tileLayer(currentDark() ? CFG.map.tilesDark : CFG.map.tilesLight, { attribution: CFG.map.attribution, maxZoom: CFG.map.maxZoom, detectRetina: true }).addTo(map);
+    var url, attr, maxZ = CFG.map.maxZoom;
+    if (baseMode === "satellite") { url = CFG.map.tilesSatellite; attr = CFG.map.attributionSatellite; maxZ = 18; }
+    else { url = currentDark() ? CFG.map.tilesDark : CFG.map.tilesLight; attr = CFG.map.attribution; }
+    tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true }).addTo(map);
   }
   swapTiles();
-  var layers = { demo: L.layerGroup(), sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), nodes: L.layerGroup().addTo(map), labor: L.layerGroup(), alt: L.layerGroup().addTo(map) };
+
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: L.layerGroup().addTo(map) };
+  var groupToggles = { sites: true, rings: true, alt: true };
+  var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
   function siteIcon(i) { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 28], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
   function altIcon() { return L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11, 11], html: '<div class="mk mk--alt">◇</div>' }); }
   function nodeIcon() { return L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="mk mk--node"></div>' }); }
 
-  /* ---------- Demographics rendering ---------- */
-  function renderDemographics() {
-    var demo = D.demographics; if (!demo) return;
-    var metric = demo.metric || LDR.pickDemoMetric(demo.points, demo.geojson);
-    var accent = css("--accent"), accentStrong = css("--accent-strong");
-    $("#lyr-demo-label").textContent = "Demographics" + (metric ? " · " + metric : "");
-    if (demo.points && demo.points.length) {
-      var vals = demo.points.map(function (p) { return p.metrics[metric] || 0; });
-      var max = Math.max.apply(null, vals) || 1;
-      demo.points.forEach(function (p) {
-        var v = p.metrics[metric] || 0;
-        var r = 6 + 22 * Math.sqrt(v / max);
-        var tip = "<strong>" + esc(p.name) + "</strong>" + Object.keys(p.metrics).map(function (k) { return "<br>" + esc(k) + ": " + fmt(p.metrics[k]); }).join("");
-        L.circleMarker(p.coords, { radius: r, color: accentStrong, weight: 1, fillColor: accent, fillOpacity: 0.45 })
-          .bindTooltip(tip, { direction: "top", sticky: true }).addTo(layers.demo);
-      });
-      demoLegend("size", metric, max);
-    } else if (demo.geojson) {
-      var props = (demo.geojson.features || []).map(function (f) { return (f.properties || {})[metric] || 0; });
-      var mx = Math.max.apply(null, props) || 1, mn = Math.min.apply(null, props) || 0;
-      L.geoJSON(demo.geojson, {
-        style: function (f) {
-          var v = (f.properties || {})[metric] || 0;
-          var t = (v - mn) / (mx - mn || 1);
-          return { color: accentStrong, weight: 1, fillColor: accent, fillOpacity: 0.12 + 0.6 * t };
-        },
-        onEachFeature: function (f, lyr) {
-          var pr = f.properties || {};
-          lyr.bindTooltip(Object.keys(pr).map(function (k) { return esc(k) + ": " + fmt(pr[k]); }).join("<br>"), { sticky: true });
-        },
-      }).addTo(layers.demo);
-      demoLegend("choropleth", metric, mx, mn);
-    }
-  }
-  function demoLegend(kind, metric, max, min) {
-    var el = $("#demoLegend"); el.hidden = false;
-    if (kind === "size") {
-      el.innerHTML = '<div class="eyebrow">' + esc(metric) + '</div><div class="demo-legend__row"><span class="demo-bub demo-bub--sm"></span><span class="demo-bub demo-bub--md"></span><span class="demo-bub demo-bub--lg"></span><span class="demo-legend__cap">circle size = value</span></div>';
-    } else {
-      el.innerHTML = '<div class="eyebrow">' + esc(metric) + '</div><div class="demo-ramp"></div><div class="demo-legend__cap num">' + fmt(Math.round(min)) + " – " + fmt(Math.round(max)) + "</div>";
-    }
-  }
-
   /* ---------- Render / re-render the whole map ---------- */
   var didFitOnce = false;
   function renderMap(opts) {
     opts = opts || {};
-    Object.keys(layers).forEach(function (k) { layers[k].clearLayers(); });
-    $("#demoLegend").hidden = true;
+    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers();
+    Object.keys(benchmarkMk).forEach(function (id) { if (map.hasLayer(benchmarkMk[id])) map.removeLayer(benchmarkMk[id]); });
+    Object.keys(laborCircle).forEach(function (id) { if (map.hasLayer(laborCircle[id])) map.removeLayer(laborCircle[id]); });
+    benchmarkMk = {}; laborCircle = {};
 
     (D.sites || []).forEach(function (s, i) {
       if (!s.coords) return;
-      L.marker(s.coords, { icon: siteIcon(i), title: s.name })
-        .on("click", function () { openSite(s, i); })
-        .bindTooltip(clean(s.name), { direction: "top", offset: [0, -24] }).addTo(layers.sites);
-      L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 }).addTo(layers.rings);
-      L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 }).addTo(layers.labor);
+      L.marker(s.coords, { icon: siteIcon(i), title: s.name }).on("click", function () { openSite(s, i); }).bindTooltip(clean(s.name), { direction: "top", offset: [0, -24] }).addTo(groups.sites);
+      L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 }).addTo(groups.rings);
+      if (!(s.id in laborOn)) laborOn[s.id] = false;
+      var lc = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
+      laborCircle[s.id] = lc; if (laborOn[s.id]) lc.addTo(map);
     });
     (D.alsoConsidered || []).forEach(function (s) {
       if (!s.coords) return;
-      L.marker(s.coords, { icon: altIcon(), title: s.name }).on("click", function () { openAlt(s); }).bindTooltip(clean(s.name), { direction: "top" }).addTo(layers.alt);
+      L.marker(s.coords, { icon: altIcon(), title: s.name }).on("click", function () { openAlt(s); }).bindTooltip(clean(s.name), { direction: "top" }).addTo(groups.alt);
     });
     (D.nodes || []).forEach(function (n) {
-      L.marker(n.coords, { icon: nodeIcon() }).bindTooltip('<span class="node-tip">' + esc(n.name) + "</span>", { direction: "top", offset: [0, -6] }).addTo(layers.nodes);
+      if (!(n.id in benchmarkOn)) benchmarkOn[n.id] = true;
+      var mk = L.marker(n.coords, { icon: nodeIcon() }).bindTooltip('<span class="node-tip">' + esc(n.name) + "</span>", { direction: "top", offset: [0, -6] });
+      benchmarkMk[n.id] = mk; if (benchmarkOn[n.id]) mk.addTo(map);
     });
 
-    // demographics
-    var demoRow = $("#lyr-demo-row");
-    if (D.demographics) {
-      demoRow.hidden = false;
-      renderDemographics();
-      if ($("#lyr-demo").checked && !map.hasLayer(layers.demo)) layers.demo.addTo(map);
-    } else { demoRow.hidden = true; if (map.hasLayer(layers.demo)) map.removeLayer(layers.demo); }
-
-    // fit
     var pts = (D.sites || []).filter(function (s) { return s.coords; }).map(function (s) { return s.coords; })
       .concat((D.alsoConsidered || []).filter(function (s) { return s.coords; }).map(function (s) { return s.coords; }));
-    if (D.demographics && D.demographics.points) pts = pts.concat(D.demographics.points.map(function (p) { return p.coords; }));
     if ((opts.fit !== false) && pts.length) { try { map.fitBounds(L.latLngBounds(pts).pad(0.25)); didFitOnce = true; } catch (e) {} }
     else if (!didFitOnce && !pts.length) { map.setView(CFG.map.center, CFG.map.zoom); }
+    buildLayersPanel();
   }
 
-  // Layer toggles
-  function bindLayer(id, grp) { var cb = $(id); cb.addEventListener("change", function () { cb.checked ? grp.addTo(map) : map.removeLayer(grp); }); }
-  bindLayer("#lyr-sites", layers.sites); bindLayer("#lyr-rings", layers.rings); bindLayer("#lyr-nodes", layers.nodes);
-  bindLayer("#lyr-labor", layers.labor); bindLayer("#lyr-alt", layers.alt); bindLayer("#lyr-demo", layers.demo);
+  /* ---------- Layers control (benchmarks + labor sheds individually) ---------- */
+  function buildLayersPanel() {
+    var bench = (D.nodes || []).map(function (n) { return '<label class="layers__row layers__row--sub"><input type="checkbox" data-bench="' + n.id + '"' + (benchmarkOn[n.id] ? " checked" : "") + '> <span>' + esc(clean(n.name)) + "</span></label>"; }).join("");
+    var sheds = (D.sites || []).map(function (s) { return '<label class="layers__row layers__row--sub"><input type="checkbox" data-shed="' + s.id + '"' + (laborOn[s.id] ? " checked" : "") + '> <span>' + esc(s.city) + "</span></label>"; }).join("");
+    $("#layers").innerHTML =
+      '<div class="layers__title eyebrow">Basemap</div>' +
+      '<div class="basemap"><button class="basemap__btn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">Map</button><button class="basemap__btn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">Satellite</button></div>' +
+      '<div class="layers__title eyebrow">Layers</div>' +
+      '<label class="layers__row"><input type="checkbox" data-grp="sites"' + (groupToggles.sites ? " checked" : "") + '> <span>Finalist sites</span></label>' +
+      '<label class="layers__row"><input type="checkbox" data-grp="rings"' + (groupToggles.rings ? " checked" : "") + '> <span>10-mile reach</span></label>' +
+      '<label class="layers__row"><input type="checkbox" data-grp="alt"' + (groupToggles.alt ? " checked" : "") + '> <span>Also-considered</span></label>' +
+      '<div class="layers__title eyebrow" style="margin-top:12px">Benchmarks</div>' + bench +
+      '<div class="layers__title eyebrow" style="margin-top:12px">Labor sheds</div>' + sheds;
+  }
+  document.addEventListener("click", function (e) {
+    var bb = e.target.closest(".basemap__btn");
+    if (bb) { baseMode = bb.dataset.base; swapTiles(); buildLayersPanel(); }
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.grp) { groupToggles[t.dataset.grp] = t.checked; t.checked ? groups[t.dataset.grp].addTo(map) : map.removeLayer(groups[t.dataset.grp]); }
+    else if (t.dataset && t.dataset.bench) { benchmarkOn[t.dataset.bench] = t.checked; var mk = benchmarkMk[t.dataset.bench]; if (mk) { t.checked ? mk.addTo(map) : map.removeLayer(mk); } }
+    else if (t.dataset && t.dataset.shed) { laborOn[t.dataset.shed] = t.checked; var lc = laborCircle[t.dataset.shed]; if (lc) { t.checked ? lc.addTo(map) : map.removeLayer(lc); } }
+  });
 
   /* ---------- Drawer ---------- */
   var drawer = $("#drawer"), drawerBody = $("#drawerBody");
@@ -155,7 +133,9 @@
   function renderChecklist(list) {
     if (!list || !list.length) return "";
     return '<ul class="chk">' + list.map(function (c) {
-      return '<li class="chk--' + c.status + '"><span class="chk__ico">' + (c.status === "met" ? "✓" : "?") + "</span>" + esc(c.label) + "</li>";
+      return c.status === "met"
+        ? '<li class="chk--met"><span class="chk__ico">✓</span><span class="chk__lbl">' + esc(c.label) + "</span></li>"
+        : '<li class="chk--rfd"><span class="chk__ico chk__ico--rfd">–</span><span class="chk__lbl">' + esc(c.label) + '</span><em class="chk__note">requires further diligence</em></li>';
     }).join("") + "</ul>";
   }
   function demoMini(s) {
@@ -174,21 +154,19 @@
     openDrawer(
       '<div class="d-eyebrow eyebrow">Finalist site</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
       '<div class="d-sub">' + esc(s.address || "") + " · " + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
-      (s.criteriaMet != null ? '<div class="score-head"><span class="score-big num">' + s.criteriaMet + '</span><span class="eyebrow">of ' + s.criteriaTotal + " criteria confirmed</span></div>" : "") +
-      (s.rent ? '<div class="d-section"><h4>Occupancy cost (NNN)</h4><dl class="kv">' +
-        kv("Base rent", s.rent.base != null ? "$" + s.rent.base.toFixed(2) + " /SF" : "—") +
-        kv("Opex + taxes", s.rent.addl != null ? "$" + s.rent.addl.toFixed(2) + " /SF" : "—") +
-        "<dt><strong>All-in</strong></dt><dd><strong>$" + (s.rent.allIn != null ? s.rent.allIn.toFixed(2) : "—") + " /SF</strong></dd></dl></div>" : "") +
+      (s.rentDisplay ? '<div class="rentchip"><span class="eyebrow">Asking rent</span><strong>' + esc(s.rentDisplay) + "</strong></div>" : "") +
       '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' +
         kv("Status", s.status) + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") +
         kv("Smallest unit", s.smallestSF ? fmt(s.smallestSF) + " SF" : "—") + kv("Clear height", s.clearHeight) +
         kv("Dock doors", s.dockDoors) + kv("Drive-in", s.driveIns) + kv("Power", s.power) + kv("Sprinklers", s.sprinklers) +
         kv("Year built", s.yearBuilt) + kv("Owner", s.owner) + "</dl></div>" +
-      '<div class="d-section"><h4>Client criteria</h4>' + renderChecklist(s.checklist) + "</div>" +
-      (drive ? '<div class="d-section"><h4>Drive distances</h4><table class="table"><thead><tr><th>Node</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + drive + "</tbody></table></div>" : "") +
+      '<div class="d-section"><h4>Site characteristics</h4>' + renderChecklist(s.checklist) + "</div>" +
+      ((s.incentives && s.incentives.length) ? '<div class="d-section"><h4>Incentives <span class="form-note">(high level)</span></h4><ul class="list-clean">' + s.incentives.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>" : "") +
+      ((s.leaseTerms && s.leaseTerms.length) ? '<div class="d-section"><h4>Lease terms to prioritize</h4><div class="chips">' + s.leaseTerms.map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div></div>" : "") +
+      (drive ? '<div class="d-section"><h4>Drive to benchmarks</h4><table class="table"><thead><tr><th>Benchmark</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + drive + "</tbody></table></div>" : "") +
       demoMini(s)
     );
-    map.setView(s.coords, 11, { animate: true });
+    map.setView(s.coords, 13, { animate: true });
   }
   function openAlt(s) {
     openDrawer('<div class="d-eyebrow eyebrow">Also considered</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
@@ -211,17 +189,17 @@
     sites: function () {
       var cards = (D.sites || []).map(function (s, i) {
         return '<button class="stat" style="text-align:left;cursor:pointer;width:100%;margin-bottom:8px" data-site="' + i + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><strong>' + (i + 1) + ". " + esc(clean(s.name)) +
-          '</strong>' + (s.criteriaMet != null ? '<span class="score-big num" style="font-size:1.3rem">' + s.criteriaMet + "/" + s.criteriaTotal + "</span>" : "") + "</div>" +
-          '<div class="stat__lbl">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + (s.rent && s.rent.allIn != null ? " · $" + s.rent.allIn.toFixed(2) + " NNN all-in" : "") + "</div></button>";
+          '</strong>' + (s.rentDisplay ? '<span class="pill pill--accent">' + esc(s.rentDisplay) + "</span>" : "") + "</div>" +
+          '<div class="stat__lbl">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + (s.availSF ? " · " + fmt(s.availSF) + " SF avail" : "") + "</div></button>";
       }).join("");
       return head("Site detail", "Tap a site to open its full profile (or a pin on the map)") + (cards || '<p class="panel-lead">No sites loaded yet.</p>');
     },
     drive: function () {
       var blocks = (D.sites || []).map(function (s, i) {
         var rows = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join("");
-        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(clean(s.name)) + '</h4>' + (rows ? '<table class="table"><thead><tr><th>Node</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + rows + "</tbody></table>" : '<p class="form-note">No drive data in the upload — add a <code>drive</code> file or I can compute these.</p>') + "</div>";
+        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(clean(s.name)) + '</h4>' + (rows ? '<table class="table"><thead><tr><th>Benchmark</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + rows + "</tbody></table>" : "") + "</div>";
       }).join("");
-      return head("Drive distances", "To intermodal, air-freight, downtown & interstates") + blocks;
+      return head("Drive to benchmarks", "Drive time to O’Hare, downtown &amp; regional benchmarks") + blocks;
     },
     labor: function () {
       var rows = (D.sites || []).map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + "</td><td class=\"num\">" + (l.pop10mi ? fmt(l.pop10mi) : "—") + "</td><td class=\"num\">" + (l.workforce ? fmt(l.workforce) : "—") + "</td><td class=\"num\">" + (l.twEmployment ? fmt(l.twEmployment) : "—") + "</td><td class=\"num\">" + esc(l.unemployment || "—") + "</td></tr>"; }).join("");
@@ -229,17 +207,20 @@
         '<table class="table"><thead><tr><th>Site</th><th class="num">Pop 10mi</th><th class="num">Labor force</th><th class="num">Transp/whse jobs</th><th class="num">Unemp.</th></tr></thead><tbody>' + rows + "</tbody></table>" +
         '<p class="form-note">Transport &amp; warehousing employment is the cold-chain-relevant labor pool. Toggle “Labor shed” on the map for the ~20-mile draw.</p>';
     },
-    criteria: function () {
-      var sites = D.sites || [];
-      var rows = D.criteria.map(function (c, ci) {
-        var cells = sites.map(function (s) { var st = (s.checklist && s.checklist[ci]) ? s.checklist[ci].status : null; return '<td class="num">' + (st === "met" ? '<span class="chk__ico chk--met">✓</span>' : st === "confirm" ? '<span class="chk__ico chk--confirm">?</span>' : "—") + "</td>"; }).join("");
-        return "<tr><td>" + esc(c.label) + "</td>" + cells + "</tr>";
+    incentives: function () {
+      var blocks = (D.sites || []).map(function (s, i) {
+        var items = (s.incentives || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
+        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(s.city) + '</h4><ul class="list-clean">' + items + "</ul></div>";
       }).join("");
-      var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + "</th>"; }).join("");
-      var totals = sites.map(function (s) { return '<td class="num"><strong>' + (s.criteriaMet != null ? s.criteriaMet + "/" + s.criteriaTotal : "—") + "</strong></td>"; }).join("");
-      return head("Criteria scores", "Client's 10-point checklist — ✓ confirmed from data, ? to verify") +
-        '<table class="table"><thead><tr><th>Criterion</th>' + heads + "</tr></thead><tbody>" + rows + '<tr><td><strong>Confirmed</strong></td>' + totals + "</tr></tbody></table>" +
-        '<p class="form-note">' + sites.map(function (s, i) { return (i + 1) + " = " + esc(s.city); }).join(" · ") + " · “?” = confirm on tour (floor drains, backup power).</p>";
+      return head("Incentives", "High-level programs the sites may qualify for — subject to application") + blocks +
+        '<p class="form-note">All three sit in Cook County (Class 6b territory). Eligibility &amp; value to be confirmed with the county and municipalities.</p>';
+    },
+    lease: function () {
+      var blocks = (D.sites || []).map(function (s, i) {
+        var pills = (s.leaseTerms || []).map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ");
+        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(s.city) + ' <span class="form-note">· ' + esc(s.rentDisplay || "") + '</span></h4><div class="chips">' + pills + "</div></div>";
+      }).join("");
+      return head("Lease terms to prioritize", "The terms most peculiar to each property to focus negotiation") + blocks;
     },
     demographics: function () {
       var sites = D.sites || [];
