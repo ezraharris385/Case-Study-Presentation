@@ -4,7 +4,7 @@
 window.CASE_CONFIG = {
   // ---- Branding (shown in header) ----
   firmName: "CBRE",                      // brokerage / team
-  clientName: "ColdFresh",               // the (fictional) client company
+  clientName: "FresSpan Foods",          // the (fictional) client company
   engagementLine: "Site Selection — Greater Chicago Cold Storage",
   asOfDate: "July 2026",                 // "as of" date shown on data
 
@@ -41,7 +41,7 @@ window.CASE_CONFIG = {
 
   // ---- Auto-load data files from the /data folder on startup ----
   // These load as the shared dataset EVERYONE sees. Paths are relative to each build folder.
-  // Empty because the real ColdFresh data now lives authoritatively in shared/data.js
+  // Empty because the real FresSpan Foods data now lives authoritatively in shared/data.js
   // (richer than flat CSVs). To change what everyone sees, edit shared/data.js (or ask me).
   dataAutoload: [],
 

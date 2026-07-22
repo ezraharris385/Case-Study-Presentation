@@ -8,6 +8,7 @@
   var moneyM = function (n) { return "$" + (n / 1e6).toFixed(1) + "M"; };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); };
   var clean = function (s) { return String(s || "").replace(/^SAMPLE — /, ""); };
+  var siteLabel = function (s) { return clean((s && (s.address || s.city || s.name)) || ""); };
   var fmt = function (n) { return typeof n === "number" ? n.toLocaleString() : n; };
 
   // ---- data state ----
@@ -78,14 +79,14 @@
     groups.alt.clearLayers();
     (D.sites || []).forEach(function (s, i) {
       if (!s.coords) return;
-      refSite[s.id] = L.marker(s.coords, { icon: siteIcon(i), title: s.name }).on("click", function () { openSite(s, i); }).bindTooltip(clean(s.name), { direction: "top", offset: [0, -24] });
+      refSite[s.id] = L.marker(s.coords, { icon: siteIcon(i), title: siteLabel(s) }).on("click", function () { openSite(s, i); }).bindTooltip(siteLabel(s), { direction: "top", offset: [0, -24] });
       refRing[s.id] = L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, renderer: vectorRenderer, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.05 });
       refLabor[s.id] = L.circle(s.coords, { radius: 20 * 1609.34, renderer: vectorRenderer, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.04 });
       var ig = L.layerGroup();
       (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false, renderer: vectorRenderer, smoothFactor: 2 }).addTo(ig); });
       refIso[s.id] = ig;
     });
-    (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon(), title: s.name }).on("click", function () { openAlt(s); }).bindTooltip(clean(s.name), { direction: "top" }).addTo(groups.alt); });
+    (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon(), title: siteLabel(s) }).on("click", function () { openAlt(s); }).bindTooltip(siteLabel(s), { direction: "top" }).addTo(groups.alt); });
     (D.nodes || []).forEach(function (n) { refBench[n.id] = L.marker(n.coords, { icon: nodeIcon() }).bindTooltip('<span class="node-tip">' + esc(n.name) + "</span>", { direction: "top", offset: [0, -6] }); });
   }
   function setVis(layer, show) { if (!layer) return; if (show) { if (!map.hasLayer(layer)) layer.addTo(map); } else if (map.hasLayer(layer)) map.removeLayer(layer); }
@@ -123,7 +124,7 @@
   /* ---------- Layers panel: pick sites, then flip global overlays ---------- */
   function buildLayersPanel() {
     function row(attr, val, label, sw, onv) { return '<label class="layers__row"><input type="checkbox" data-' + attr + '="' + val + '"' + (onv ? " checked" : "") + '> <i class="layers__sw layers__sw--' + sw + '"></i><span>' + label + "</span></label>"; }
-    var siteRows = (D.sites || []).map(function (s, i) { return row("site", s.id, (i + 1) + ". " + esc(s.city), "site", on.site[s.id]); }).join("");
+    var siteRows = (D.sites || []).map(function (s, i) { return row("site", s.id, (i + 1) + ". " + esc(siteLabel(s)), "site", on.site[s.id]); }).join("");
     var featRows = row("feat", "ring", "10-mile reach", "ring", on.feat.ring) + row("feat", "iso", "Drive-time reach", "iso", on.feat.iso) + row("feat", "labor", "Labor shed", "labor", on.feat.labor);
     var benchRows = (D.nodes || []).map(function (n) { return row("bench", n.id, esc(clean(n.name)), "node", on.bench[n.id]); }).join("");
     $("#layers").innerHTML =
@@ -171,8 +172,8 @@
     currentView = "sites"; setActiveNav("sites");
     var drive = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + " mi</td><td class=\"num\">" + d.min + " min</td></tr>"; }).join("");
     openDrawer(
-      '<div class="d-eyebrow eyebrow">Finalist site</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
-      '<div class="d-sub">' + esc(s.address || "") + " · " + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
+      '<div class="d-eyebrow eyebrow">Finalist site</div><h2 class="d-title">' + esc(siteLabel(s)) + "</h2>" +
+      '<div class="d-sub">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
       (s.rentDisplay ? '<div class="rentchip"><span class="eyebrow">Asking rent</span><strong>' + esc(s.rentDisplay) + "</strong></div>" : "") +
       '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' +
         kv("Status", s.status) + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") +
@@ -188,8 +189,8 @@
     if (s.coords) map.flyTo(s.coords, 15, { duration: 0.8 });
   }
   function openAlt(s) {
-    openDrawer('<div class="d-eyebrow eyebrow">Also considered</div><h2 class="d-title">' + esc(clean(s.name)) + "</h2>" +
-      '<div class="d-sub">' + esc(s.address || "") + (s.city ? " · " + esc(s.city) : "") + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
+    openDrawer('<div class="d-eyebrow eyebrow">Also considered</div><h2 class="d-title">' + esc(siteLabel(s)) + "</h2>" +
+      '<div class="d-sub">' + (s.city ? esc(s.city) : "") + (s.submarket ? " · " + esc(s.submarket) : "") + "</div>" +
       '<dl class="kv">' + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") +
       kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Power", s.power) + kv("Owner", s.owner) + "</dl>" +
       '<p class="form-note" style="margin-top:12px">Screened in the search; not shortlisted to the final three.</p>');
@@ -207,7 +208,7 @@
     },
     sites: function () {
       var cards = (D.sites || []).map(function (s, i) {
-        return '<button class="stat" style="text-align:left;cursor:pointer;width:100%;margin-bottom:8px" data-site="' + i + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><strong>' + (i + 1) + ". " + esc(clean(s.name)) +
+        return '<button class="stat" style="text-align:left;cursor:pointer;width:100%;margin-bottom:8px" data-site="' + i + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><strong>' + (i + 1) + ". " + esc(siteLabel(s)) +
           '</strong>' + (s.rentDisplay ? '<span class="pill pill--accent">' + esc(s.rentDisplay) + "</span>" : "") + "</div>" +
           '<div class="stat__lbl">' + esc(s.city) + (s.submarket ? " · " + esc(s.submarket) : "") + (s.availSF ? " · " + fmt(s.availSF) + " SF avail" : "") + "</div></button>";
       }).join("");
@@ -216,12 +217,12 @@
     drive: function () {
       var blocks = (D.sites || []).map(function (s, i) {
         var rows = (s.drive || []).map(function (d) { return '<tr><td>' + esc(d.node) + '</td><td class="num">' + d.miles + ' mi</td><td class="num">' + d.min + ' min</td></tr>'; }).join("");
-        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(clean(s.name)) + '</h4>' + (rows ? '<table class="table"><thead><tr><th>Benchmark</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + rows + "</tbody></table>" : "") + "</div>";
+        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(siteLabel(s)) + '</h4>' + (rows ? '<table class="table"><thead><tr><th>Benchmark</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + rows + "</tbody></table>" : "") + "</div>";
       }).join("");
       return head("Drive to benchmarks", "Drive time to O’Hare, downtown &amp; regional benchmarks") + blocks;
     },
     labor: function () {
-      var rows = (D.sites || []).map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(s.city) + "</td><td class=\"num\">" + (l.pop10mi ? fmt(l.pop10mi) : "—") + "</td><td class=\"num\">" + (l.workforce ? fmt(l.workforce) : "—") + "</td><td class=\"num\">" + (l.twEmployment ? fmt(l.twEmployment) : "—") + "</td><td class=\"num\">" + esc(l.unemployment || "—") + "</td></tr>"; }).join("");
+      var rows = (D.sites || []).map(function (s, i) { var l = s.labor || {}; return "<tr><td>" + (i + 1) + ". " + esc(siteLabel(s)) + "</td><td class=\"num\">" + (l.pop10mi ? fmt(l.pop10mi) : "—") + "</td><td class=\"num\">" + (l.workforce ? fmt(l.workforce) : "—") + "</td><td class=\"num\">" + (l.twEmployment ? fmt(l.twEmployment) : "—") + "</td><td class=\"num\">" + esc(l.unemployment || "—") + "</td></tr>"; }).join("");
       return head("Labor forces", "Workforce within 10 miles of each finalist") +
         '<table class="table"><thead><tr><th>Site</th><th class="num">Pop 10mi</th><th class="num">Labor force</th><th class="num">Transp/whse jobs</th><th class="num">Unemp.</th></tr></thead><tbody>' + rows + "</tbody></table>" +
         '<p class="form-note">Transport &amp; warehousing employment is the cold-chain-relevant labor pool. Toggle “Labor shed” on the map for the ~20-mile draw.</p>';
@@ -229,7 +230,7 @@
     incentives: function () {
       var blocks = (D.sites || []).map(function (s, i) {
         var items = (s.incentives || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
-        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(s.city) + '</h4><ul class="list-clean">' + items + "</ul></div>";
+        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(siteLabel(s)) + '</h4><ul class="list-clean">' + items + "</ul></div>";
       }).join("");
       return head("Incentives", "High-level programs the sites may qualify for — subject to application") + blocks +
         '<p class="form-note">All three sit in Cook County (Class 6b territory). Eligibility &amp; value to be confirmed with the county and municipalities.</p>';
@@ -237,7 +238,7 @@
     lease: function () {
       var blocks = (D.sites || []).map(function (s, i) {
         var pills = (s.leaseTerms || []).map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ");
-        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(s.city) + ' <span class="form-note">· ' + esc(s.rentDisplay || "") + '</span></h4><div class="chips">' + pills + "</div></div>";
+        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(siteLabel(s)) + ' <span class="form-note">· ' + esc(s.rentDisplay || "") + '</span></h4><div class="chips">' + pills + "</div></div>";
       }).join("");
       return head("Lease terms to prioritize", "The terms most peculiar to each property to focus negotiation") + blocks;
     },
@@ -245,7 +246,7 @@
       var sites = D.sites || [];
       if (!sites.length || !sites[0].demo) return head("Demographics", "") + '<p class="panel-lead">No demographics loaded.</p>';
       var metrics = [["Population (10 mi)", "pop10mi", fmt], ["Median HH income", "medHHinc", function (v) { return "$" + fmt(v); }], ["Avg HH income", "avgHHinc", function (v) { return "$" + fmt(v); }], ["Labor force", "laborForce", fmt], ["Unemployment", "unemploymentPct", function (v) { return v + "%"; }], ["Transp/warehouse jobs", "twEmployment", fmt], ["Manufacturing jobs", "manuf", fmt], ["Median age", "medAge", function (v) { return v; }], ["Bachelor’s+", "bachelorsPlusPct", function (v) { return v + "%"; }], ["Daytime population", "daytimePop", fmt]];
-      var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + ". " + esc(s.city) + "</th>"; }).join("");
+      var heads = sites.map(function (s, i) { return '<th class="num">' + (i + 1) + ". " + esc(siteLabel(s)) + "</th>"; }).join("");
       var rows = metrics.map(function (m) { var cells = sites.map(function (s) { return '<td class="num">' + (s.demo[m[1]] != null ? m[2](s.demo[m[1]]) : "—") + "</td>"; }).join(""); return "<tr><td>" + m[0] + "</td>" + cells + "</tr>"; }).join("");
       return head("Demographics", "10-mile trade area around each finalist (current-year estimates)") +
         '<table class="table"><thead><tr><th>Metric</th>' + heads + "</tr></thead><tbody>" + rows + "</tbody></table>";
@@ -261,7 +262,7 @@
       if (item.type === "text") return field(item, '<input type="text" data-q="' + item.id + '" placeholder="' + esc(item.placeholder || "") + '">');
       if (item.type === "textarea") return field(item, '<textarea data-q="' + item.id + '" placeholder="' + esc(item.placeholder || "") + '"></textarea>');
       if (item.type === "choice") return field(item, choiceRow(item.id, item.options));
-      if (item.type === "site") return field(item, choiceRow(item.id, (D.sites || []).map(function (s) { return s.city || clean(s.name); })));
+      if (item.type === "site") return field(item, choiceRow(item.id, (D.sites || []).map(function (s) { return siteLabel(s); })));
       if (item.type === "rank") { rankState = item.options.slice(); return field(item, '<ul class="rank-list" data-q="' + item.id + '" id="rankList"></ul>'); }
       return "";
     }).join("");
@@ -279,7 +280,7 @@
   });
   document.addEventListener("submit", function (e) { if (e.target.id !== "surveyForm") return; e.preventDefault(); submitSurvey(e.target); });
   function submitSurvey(form) {
-    var payload = { _from: "desktop", client: CFG.clientName, _subject: "Cold-chain site survey — ColdFresh" };
+    var payload = { _from: "desktop", client: CFG.clientName, _subject: "Cold-chain site survey — " + CFG.clientName };
     Array.prototype.forEach.call(form.querySelectorAll("[data-q]"), function (el) { var id = el.getAttribute("data-q"); if (el.classList.contains("choice-row")) { var sel = el.querySelector(".is-sel"); payload[id] = sel ? sel.dataset.val : ""; } else if (el.classList.contains("rank-list")) { payload[id] = rankState ? rankState.join(" > ") : ""; } else payload[id] = el.value; });
     var toast = $("#surveyToast"), btn = form.querySelector(".btn");
     var url = surveyUrl();
