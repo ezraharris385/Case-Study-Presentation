@@ -36,6 +36,11 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .mk--site span { transform: rotate(-45deg); font-size: 0.8rem; }
 .mk--alt { width: 24px; height: 24px; border-radius: 50%; background: var(--surface); border: 2px dashed var(--site-alt); color: var(--site-alt); }
 .mk--node { width: 16px; height: 16px; border-radius: 3px; background: var(--node-color); border: 2px solid var(--surface); }
+.pin { position: relative; }
+.pin--site, .pin--alt { border-radius: 50% 50% 50% 0; transform: rotate(45deg); box-shadow: 0 3px 5px rgba(14,27,42,0.35); }
+.pin--site { width: 28px; height: 28px; background: var(--site-primary); border: 2px solid #fff; }
+.pin--site span { position: absolute; inset: 0; transform: rotate(-45deg); display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; }
+.pin--alt { width: 20px; height: 20px; background: var(--surface); border: 2.5px solid var(--site-alt); }
 
 /* scroller views */
 .scroller { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 14px 90px; }

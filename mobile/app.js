@@ -46,15 +46,13 @@
     tileLayer = L.tileLayer(url, { attribution: attr, maxZoom: maxZ, detectRetina: true }).addTo(map);
   }
   swapTiles();
-  function clusterIcon(cluster) { return L.divIcon({ html: '<div class="cl-bub">' + cluster.getChildCount() + "</div>", className: "cl-wrap", iconSize: [36, 36] }); }
-  var altGroup = (typeof L.markerClusterGroup === "function") ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 55, spiderfyOnMaxZoom: true, iconCreateFunction: clusterIcon }) : L.layerGroup();
-  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup, iso: L.layerGroup() };
+  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: L.layerGroup(), iso: L.layerGroup() };
   var groupToggles = { rings: true, alt: false, iso: false };
   function isoStyle(t) { return t <= 15 ? { color: css("--navy"), weight: 1.4, opacity: 0.85, fillColor: css("--navy"), fillOpacity: 0.16 } : { color: css("--navy"), weight: 1, opacity: 0.6, dashArray: "4 3", fillColor: css("--navy"), fillOpacity: 0.06 }; }
   var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
 
-  function siteIcon(i) { return L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 32], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
-  function altIcon() { return L.divIcon({ className: "", iconSize: [24, 24], iconAnchor: [12, 12], html: '<div class="mk mk--alt">◇</div>' }); }
+  function siteIcon(i) { return L.divIcon({ className: "", iconSize: [30, 38], iconAnchor: [15, 36], html: '<div class="pin pin--site"><span>' + (i + 1) + "</span></div>" }); }
+  function altIcon() { return L.divIcon({ className: "", iconSize: [22, 29], iconAnchor: [11, 28], html: '<div class="pin pin--alt"></div>' }); }
   function nodeIcon() { return L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="mk mk--node"></div>' }); }
 
   var didFit = false;

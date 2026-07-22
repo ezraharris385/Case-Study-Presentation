@@ -57,45 +57,52 @@
   }
   swapTiles();
 
-  function clusterIcon(cluster) { return L.divIcon({ html: '<div class="cl-bub">' + cluster.getChildCount() + "</div>", className: "cl-wrap", iconSize: [36, 36] }); }
-  var altGroup = (typeof L.markerClusterGroup === "function") ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 55, spiderfyOnMaxZoom: true, iconCreateFunction: clusterIcon }) : L.layerGroup();
-  var groups = { sites: L.layerGroup().addTo(map), rings: L.layerGroup().addTo(map), alt: altGroup.addTo(map), iso: L.layerGroup() };
-  var groupToggles = { sites: true, rings: true, alt: true, iso: false };
+  var groups = { sites: L.layerGroup(), alt: L.layerGroup() };
   function isoStyle(t) { return t <= 15 ? { color: css("--navy"), weight: 1.4, opacity: 0.85, fillColor: css("--navy"), fillOpacity: 0.16 } : { color: css("--navy"), weight: 1, opacity: 0.6, dashArray: "4 3", fillColor: css("--navy"), fillOpacity: 0.06 }; }
-  var benchmarkMk = {}, laborCircle = {}, benchmarkOn = {}, laborOn = {};
-
-  function siteIcon(i) { return L.divIcon({ className: "", iconSize: [30, 30], iconAnchor: [15, 28], html: '<div class="mk mk--site"><span>' + (i + 1) + "</span></div>" }); }
-  function altIcon() { return L.divIcon({ className: "", iconSize: [22, 22], iconAnchor: [11, 11], html: '<div class="mk mk--alt">◇</div>' }); }
+  function siteIcon(i) { return L.divIcon({ className: "", iconSize: [28, 36], iconAnchor: [14, 34], html: '<div class="pin pin--site"><span>' + (i + 1) + "</span></div>" }); }
+  function altIcon() { return L.divIcon({ className: "", iconSize: [20, 27], iconAnchor: [10, 26], html: '<div class="pin pin--alt"></div>' }); }
   function nodeIcon() { return L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="mk mk--node"></div>' }); }
 
-  /* ---------- Render / re-render the whole map ---------- */
-  var didFitOnce = false;
-  function renderMap(opts) {
-    opts = opts || {};
-    groups.sites.clearLayers(); groups.rings.clearLayers(); groups.alt.clearLayers(); groups.iso.clearLayers();
-    Object.keys(benchmarkMk).forEach(function (id) { if (map.hasLayer(benchmarkMk[id])) map.removeLayer(benchmarkMk[id]); });
-    Object.keys(laborCircle).forEach(function (id) { if (map.hasLayer(laborCircle[id])) map.removeLayer(laborCircle[id]); });
-    benchmarkMk = {}; laborCircle = {};
+  /* ---------- Layer state (master + per-property) ---------- */
+  var on = { sites: true, alt: true, ring: {}, iso: {}, labor: {}, bench: {} };
+  var expanded = { ring: false, iso: false, labor: false, bench: false };
+  function initState() {
+    (D.nodes || []).forEach(function (n) { if (!(n.id in on.bench)) on.bench[n.id] = true; });
+    (D.sites || []).forEach(function (s) { if (!(s.id in on.ring)) on.ring[s.id] = true; if (!(s.id in on.iso)) on.iso[s.id] = false; if (!(s.id in on.labor)) on.labor[s.id] = false; });
+  }
+  function itemsFor(cat) { return cat === "bench" ? (D.nodes || []).map(function (n) { return n.id; }) : (D.sites || []).map(function (s) { return s.id; }); }
+  function catState(cat) { var items = itemsFor(cat); return { all: items.length && items.every(function (id) { return on[cat][id]; }), some: items.some(function (id) { return on[cat][id]; }) }; }
 
+  var refRing = {}, refIso = {}, refLabor = {}, refBench = {};
+  function clearRefs() { [refRing, refIso, refLabor, refBench].forEach(function (o) { Object.keys(o).forEach(function (k) { if (map.hasLayer(o[k])) map.removeLayer(o[k]); }); }); }
+  function buildLayers() {
+    clearRefs(); refRing = {}; refIso = {}; refLabor = {}; refBench = {};
+    groups.sites.clearLayers(); groups.alt.clearLayers();
     (D.sites || []).forEach(function (s, i) {
       if (!s.coords) return;
       L.marker(s.coords, { icon: siteIcon(i), title: s.name }).on("click", function () { openSite(s, i); }).bindTooltip(clean(s.name), { direction: "top", offset: [0, -24] }).addTo(groups.sites);
-      L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 }).addTo(groups.rings);
-      if (!(s.id in laborOn)) laborOn[s.id] = false;
-      var lc = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
-      laborCircle[s.id] = lc; if (laborOn[s.id]) lc.addTo(map);
-      (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false }).addTo(groups.iso); });
+      refRing[s.id] = L.circle(s.coords, { radius: CFG.map.reachMiles * 1609.34, color: css("--ring-color"), weight: 1.5, opacity: 0.7, fillColor: css("--ring-color"), fillOpacity: 0.06 });
+      refLabor[s.id] = L.circle(s.coords, { radius: 20 * 1609.34, color: css("--labor-color"), weight: 1, dashArray: "4 4", opacity: 0.7, fillColor: css("--labor-color"), fillOpacity: 0.05 });
+      var ig = L.layerGroup();
+      (s.iso || []).slice().sort(function (a, b) { return b.time - a.time; }).forEach(function (c) { L.geoJSON({ type: "Feature", geometry: c.geometry }, { style: isoStyle(c.time), interactive: false }).addTo(ig); });
+      refIso[s.id] = ig;
     });
-    (D.alsoConsidered || []).forEach(function (s) {
-      if (!s.coords) return;
-      L.marker(s.coords, { icon: altIcon(), title: s.name }).on("click", function () { openAlt(s); }).bindTooltip(clean(s.name), { direction: "top" }).addTo(groups.alt);
-    });
-    (D.nodes || []).forEach(function (n) {
-      if (!(n.id in benchmarkOn)) benchmarkOn[n.id] = true;
-      var mk = L.marker(n.coords, { icon: nodeIcon() }).bindTooltip('<span class="node-tip">' + esc(n.name) + "</span>", { direction: "top", offset: [0, -6] });
-      benchmarkMk[n.id] = mk; if (benchmarkOn[n.id]) mk.addTo(map);
-    });
+    (D.alsoConsidered || []).forEach(function (s) { if (!s.coords) return; L.marker(s.coords, { icon: altIcon(), title: s.name }).on("click", function () { openAlt(s); }).bindTooltip(clean(s.name), { direction: "top" }).addTo(groups.alt); });
+    (D.nodes || []).forEach(function (n) { refBench[n.id] = L.marker(n.coords, { icon: nodeIcon() }).bindTooltip('<span class="node-tip">' + esc(n.name) + "</span>", { direction: "top", offset: [0, -6] }); });
+  }
+  function setVis(layer, show) { if (!layer) return; if (show) { if (!map.hasLayer(layer)) layer.addTo(map); } else if (map.hasLayer(layer)) map.removeLayer(layer); }
+  function syncMap() {
+    setVis(groups.sites, on.sites); setVis(groups.alt, on.alt);
+    Object.keys(refBench).forEach(function (id) { setVis(refBench[id], on.bench[id]); });
+    Object.keys(refRing).forEach(function (id) { setVis(refRing[id], on.ring[id]); });
+    Object.keys(refIso).forEach(function (id) { setVis(refIso[id], on.iso[id]); });
+    Object.keys(refLabor).forEach(function (id) { setVis(refLabor[id], on.labor[id]); });
+  }
 
+  var didFitOnce = false;
+  function renderMap(opts) {
+    opts = opts || {};
+    initState(); buildLayers(); syncMap();
     var pts = (D.sites || []).filter(function (s) { return s.coords; }).map(function (s) { return s.coords; })
       .concat((D.alsoConsidered || []).filter(function (s) { return s.coords; }).map(function (s) { return s.coords; }));
     if ((opts.fit !== false) && pts.length) { try { map.fitBounds(L.latLngBounds(pts).pad(0.25)); didFitOnce = true; } catch (e) {} }
@@ -103,36 +110,38 @@
     buildLayersPanel();
   }
 
-  /* ---------- Layers control (benchmarks + labor sheds individually) ---------- */
+  /* ---------- Layers panel: main toggles + per-property expanders ---------- */
   function buildLayersPanel() {
-    function row(attr, label, on, sub, swatch) {
-      return '<label class="layers__row' + (sub ? " layers__row--sub" : "") + '"><input type="checkbox" ' + attr + (on ? " checked" : "") + '> ' +
-        (swatch ? '<i class="layers__sw layers__sw--' + swatch + '"></i>' : "") + "<span>" + label + "</span></label>";
+    function simple(grp, label, onv, sw) { return '<label class="layers__row"><input type="checkbox" data-grp="' + grp + '"' + (onv ? " checked" : "") + '> <i class="layers__sw layers__sw--' + sw + '"></i><span>' + label + "</span></label>"; }
+    function cat(catk, label, sw, items) {
+      var st = catState(catk);
+      var main = '<div class="layers__mainrow"><label class="layers__row"><input type="checkbox" data-master="' + catk + '"' + (st.all ? " checked" : "") + '> <i class="layers__sw layers__sw--' + sw + '"></i><span>' + label + '</span></label><button class="layers__caret' + (expanded[catk] ? " is-open" : "") + '" data-expand="' + catk + '" aria-label="Per property">▾</button></div>';
+      var sub = expanded[catk] ? ('<div class="layers__sub">' + items.map(function (it) { return '<label class="layers__row layers__row--sub"><input type="checkbox" data-item="' + catk + '" data-id="' + it.id + '"' + (on[catk][it.id] ? " checked" : "") + '> <span>' + esc(it.label) + "</span></label>"; }).join("") + "</div>") : "";
+      return '<div class="layers__cat">' + main + sub + "</div>";
     }
-    var bench = (D.nodes || []).map(function (n) { return row('data-bench="' + n.id + '"', esc(clean(n.name)), benchmarkOn[n.id], true); }).join("");
-    var sheds = (D.sites || []).map(function (s) { return row('data-shed="' + s.id + '"', esc(s.city), laborOn[s.id], true); }).join("");
+    var nodes = (D.nodes || []).map(function (n) { return { id: n.id, label: clean(n.name) }; });
+    var siteItems = (D.sites || []).map(function (s) { return { id: s.id, label: s.city }; });
     $("#layers").innerHTML =
-      '<div class="layers__seg">' +
-        '<button class="layers__segbtn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">◱ Map</button>' +
-        '<button class="layers__segbtn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">🛰 Satellite</button>' +
-      "</div>" +
-      '<div class="layers__group"><div class="layers__title eyebrow">Sites &amp; reach</div>' +
-        row('data-grp="sites"', "Finalist sites", groupToggles.sites, false, "site") +
-        row('data-grp="alt"', "Also-considered", groupToggles.alt, false, "alt") +
-        row('data-grp="rings"', "10-mile reach", groupToggles.rings, false, "ring") +
-        row('data-grp="iso"', "Drive-time reach", groupToggles.iso, false, "iso") + "</div>" +
-      '<div class="layers__group"><div class="layers__title eyebrow">Benchmarks</div>' + bench + "</div>" +
-      '<div class="layers__group"><div class="layers__title eyebrow">Labor sheds</div>' + sheds + "</div>";
+      '<div class="layers__seg"><button class="layers__segbtn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">◱ Map</button><button class="layers__segbtn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">🛰 Satellite</button></div>' +
+      '<div class="layers__group"><div class="layers__title eyebrow">On the map</div>' +
+        simple("sites", "Finalist sites", on.sites, "site") +
+        simple("alt", "Also-considered", on.alt, "alt") +
+        cat("bench", "Benchmarks", "node", nodes) + "</div>" +
+      '<div class="layers__group"><div class="layers__title eyebrow">Reach &amp; labor <span class="layers__hint">▾ by property</span></div>' +
+        cat("ring", "10-mile reach", "ring", siteItems) +
+        cat("iso", "Drive-time reach", "iso", siteItems) +
+        cat("labor", "Labor shed", "labor", siteItems) + "</div>";
+    ["bench", "ring", "iso", "labor"].forEach(function (c) { var st = catState(c); var el = document.querySelector('[data-master="' + c + '"]'); if (el) el.indeterminate = st.some && !st.all; });
   }
   document.addEventListener("click", function (e) {
-    var bb = e.target.closest(".layers__segbtn");
-    if (bb) { baseMode = bb.dataset.base; swapTiles(); buildLayersPanel(); }
+    var bb = e.target.closest(".layers__segbtn"); if (bb) { baseMode = bb.dataset.base; swapTiles(); buildLayersPanel(); return; }
+    var cx = e.target.closest(".layers__caret"); if (cx) { expanded[cx.dataset.expand] = !expanded[cx.dataset.expand]; buildLayersPanel(); return; }
   });
   document.addEventListener("change", function (e) {
-    var t = e.target;
-    if (t.dataset && t.dataset.grp) { groupToggles[t.dataset.grp] = t.checked; t.checked ? groups[t.dataset.grp].addTo(map) : map.removeLayer(groups[t.dataset.grp]); }
-    else if (t.dataset && t.dataset.bench) { benchmarkOn[t.dataset.bench] = t.checked; var mk = benchmarkMk[t.dataset.bench]; if (mk) { t.checked ? mk.addTo(map) : map.removeLayer(mk); } }
-    else if (t.dataset && t.dataset.shed) { laborOn[t.dataset.shed] = t.checked; var lc = laborCircle[t.dataset.shed]; if (lc) { t.checked ? lc.addTo(map) : map.removeLayer(lc); } }
+    var t = e.target; if (!t.dataset) return;
+    if (t.dataset.grp) { on[t.dataset.grp] = t.checked; syncMap(); }
+    else if (t.dataset.master) { var c = t.dataset.master; itemsFor(c).forEach(function (id) { on[c][id] = t.checked; }); syncMap(); buildLayersPanel(); }
+    else if (t.dataset.item) { on[t.dataset.item][t.dataset.id] = t.checked; syncMap(); buildLayersPanel(); }
   });
 
   /* ---------- Drawer ---------- */
