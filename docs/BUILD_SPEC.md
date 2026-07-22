@@ -47,6 +47,14 @@ Assign the most important / peculiar-to-the-property terms per site, chosen from
 | Sellstrom (Palatine) | ✅ `Palatine_Corporate_Center…150_Sellstrom.pdf` (MWI) | site plan/specs, interior, aerial, MWI office plan |
 | Wilke (Arlington Heights) | ❌ NEEDED | dock-doors exterior |
 
+## Decisions update (latest)
+- **Survey backend = Formspree** (just to demonstrate an email is received; no real tracking needed). Need the user's Formspree form endpoint.
+- **CBRE logo = generate a clean "CBRE" wordmark** (brand green). Using CBRE branding is appropriate — user is a CBRE intern presenting a CBRE deliverable.
+- **Wilke has NO brochure PDF.** Its photos (aerial + interior red/yellow columns + dock doors) are pasted-only → not saveable by me.
+- **Audience = senior CRE producers/managers scanning a QR on their phones. User wants ZERO risk from CoStar photos/brochures.**
+  - RECOMMENDATION (pending confirm): **do not publish any CoStar photos/brochures.** Instead add an **Esri World Imagery satellite basemap** (free, attributed) so each property still shows a real aerial with no IP exposure; optionally public county parcel context. This also resolves the un-saveable Wilke photos.
+  - If confirmed, **photos are no longer a build blocker** and the whole spec can go in one pass.
+
 ## Open confirmations before build
 1. CBRE logo file vs. rendered wordmark; CBRE-green theme?
 2. This batch's 2 photos = Birchwood? (assumed yes)
