@@ -77,6 +77,9 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .quad--o { border-left: 3px solid var(--accent); } .quad--t { border-left: 3px solid var(--warn); }
 .list-clean { margin: 0; padding-left: 18px; } .list-clean li { margin-bottom: 8px; color: var(--ink-2); }
 
+/* Client-facing: hide the data-upload entry point */
+#openLoader { display: none; }
+
 /* CBRE logo (mobile) */
 .cbre-logo { display: inline-flex; align-items: center; justify-content: center; height: 26px; padding: 0 8px; border-radius: 5px; background: var(--accent-strong); color: #fff; font-family: var(--font-display); font-weight: 800; letter-spacing: 0.07em; font-size: 0.95rem; }
 :root[data-theme="dark"] .cbre-logo { color: #04140E; }

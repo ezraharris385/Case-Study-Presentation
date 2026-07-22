@@ -135,7 +135,7 @@
     return '<ul class="chk">' + list.map(function (c) {
       return c.status === "met"
         ? '<li class="chk--met"><span class="chk__ico">✓</span><span class="chk__lbl">' + esc(c.label) + "</span></li>"
-        : '<li class="chk--rfd"><span class="chk__ico chk__ico--rfd">–</span><span class="chk__lbl">' + esc(c.label) + '</span><em class="chk__note">requires further diligence</em></li>';
+        : '<li class="chk--rfd"><span class="chk__ico chk__ico--rfd">–</span><span class="chk__lbl">' + esc(c.label) + '</span><em class="chk__note">requires further due diligence</em></li>';
     }).join("") + "</ul>";
   }
   function demoMini(s) {
@@ -260,13 +260,21 @@
   });
   document.addEventListener("submit", function (e) { if (e.target.id !== "surveyForm") return; e.preventDefault(); submitSurvey(e.target); });
   function submitSurvey(form) {
-    var payload = { _submittedFrom: "desktop", client: CFG.clientName };
+    var payload = { _from: "desktop", client: CFG.clientName, _subject: "Cold-chain site survey — ColdFresh" };
     Array.prototype.forEach.call(form.querySelectorAll("[data-q]"), function (el) { var id = el.getAttribute("data-q"); if (el.classList.contains("choice-row")) { var sel = el.querySelector(".is-sel"); payload[id] = sel ? sel.dataset.val : ""; } else if (el.classList.contains("rank-list")) { payload[id] = rankState ? rankState.join(" > ") : ""; } else payload[id] = el.value; });
-    var toast = $("#surveyToast"), mode = CFG.survey.mode, url = CFG.survey.endpoint;
-    if (!mode || !url) { toast.className = "toast toast--ok"; toast.innerHTML = "Recorded locally (no backend configured yet).<br><strong>Your priorities:</strong> " + esc(payload.priority || "—") + (payload.favorite ? "<br><strong>Leaning:</strong> " + esc(payload.favorite) : ""); return; }
-    toast.className = "toast"; toast.textContent = "Submitting…";
-    var opts = (mode === "formspree") ? { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload) } : { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) };
-    fetch(url, opts).then(function () { toast.className = "toast toast--ok"; toast.innerHTML = "Thank you — your priorities were sent to the deal team. ✓"; form.querySelector(".btn").disabled = true; }).catch(function () { toast.className = "toast toast--err"; toast.textContent = "Couldn't reach the server. Please try again."; });
+    var toast = $("#surveyToast"), btn = form.querySelector(".btn");
+    var url = surveyUrl();
+    if (!url) { toast.className = "toast toast--ok"; toast.innerHTML = "Thank you — your feedback has been noted."; btn.disabled = true; return; }
+    toast.className = "toast"; toast.textContent = "Sending…"; btn.disabled = true;
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(payload) })
+      .then(function (r) { if (!r.ok) throw 0; toast.className = "toast toast--ok"; toast.innerHTML = "Thank you — your feedback has been sent to the CBRE team."; })
+      .catch(function () { toast.className = "toast toast--err"; toast.textContent = "Sorry, that didn’t go through — please try once more."; btn.disabled = false; });
+  }
+  function surveyUrl() {
+    var s = CFG.survey || {};
+    if (s.mode === "formsubmit" && s.email) return "https://formsubmit.co/ajax/" + encodeURIComponent(s.email);
+    if (s.mode === "formspree" && s.endpoint) return s.endpoint;
+    return "";
   }
 
   /* ---------- Nav ---------- */

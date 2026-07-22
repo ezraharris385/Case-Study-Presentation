@@ -30,8 +30,12 @@ window.CASE_CONFIG = {
   //   "formspree" : Formspree endpoint (zero-code alternative)
   //   ""          : disabled — survey shows results locally only
   survey: {
-    mode: "formspree",       // Formspree emails each submission to you
-    endpoint: "",            // paste your Formspree form URL here: https://formspree.io/f/xxxxx
+    // "formsubmit" = emails each submission via formsubmit.co (no signup; requires a one-time
+    //               activation: submit once, then click the confirmation link in the inbox).
+    // "formspree"  = Formspree endpoint (paste in `endpoint`).
+    mode: "formsubmit",
+    email: "esharris3@wisc.edu",   // where survey feedback is emailed
+    endpoint: "",                  // only for mode "formspree"
     consentNote: "Your feedback goes to the CBRE deal team. No personal data required.",
   },
 

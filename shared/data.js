@@ -162,11 +162,6 @@ window.CASE_DATA = {
           "node": "Chicago Loop",
           "miles": 26.4,
           "min": 53
-        },
-        {
-          "node": "Milwaukee",
-          "miles": 62.2,
-          "min": 124
         }
       ],
       "labor": {
@@ -281,11 +276,6 @@ window.CASE_DATA = {
           "node": "Chicago Loop",
           "miles": 16.1,
           "min": 32
-        },
-        {
-          "node": "Milwaukee",
-          "miles": 70.7,
-          "min": 141
         }
       ],
       "labor": {
@@ -400,11 +390,6 @@ window.CASE_DATA = {
           "node": "Chicago Loop",
           "miles": 26.1,
           "min": 52
-        },
-        {
-          "node": "Milwaukee",
-          "miles": 64.8,
-          "min": 130
         }
       ],
       "labor": {
@@ -766,15 +751,6 @@ window.CASE_DATA = {
       "coords": [
         41.786,
         -87.752
-      ]
-    },
-    {
-      "id": "mke",
-      "name": "Milwaukee",
-      "type": "downtown",
-      "coords": [
-        43.0389,
-        -87.9065
       ]
     }
   ],
