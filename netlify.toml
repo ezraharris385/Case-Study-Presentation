@@ -1,0 +1,8 @@
+# Static site served straight from the repo root — no build step.
+# Deploy target for a name-free URL (e.g. freshspan-sites.netlify.app).
+[build]
+  publish = "."
+  command = ""
+
+# Optional: send the bare domain root to the desktop cockpit is NOT done here —
+# the root index.html is the intended landing page (desktop link + phone QR).
