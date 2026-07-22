@@ -60,6 +60,10 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .mlay__caret { border: 0; background: transparent; color: var(--ink-muted); font-size: 0.85rem; padding: 8px 10px; cursor: pointer; transition: transform 0.15s; transform: rotate(-90deg); }
 .mlay__caret.is-open { transform: rotate(0); color: var(--accent); }
 .mlay__sub { border-top: 1px dashed var(--line); margin: 0 4px 4px; }
+.mlay__site { padding: 4px 0 6px; }
+.mlay__site + .mlay__site { border-top: 1px dashed var(--line); }
+.mlay__sitehd { font-family: var(--font-display); font-weight: 700; font-size: 0.86rem; color: var(--ink); margin: 6px 4px 2px; }
+.mlay__row--feat { padding-left: 8px; font-size: 0.85rem; color: var(--ink-2); }
 
 /* markers reused from theme + here */
 .mk { display: grid; place-items: center; font-weight: 700; color: #fff; box-shadow: var(--shadow-1); }

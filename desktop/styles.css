@@ -157,6 +157,11 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .layers__sw--ring { background: var(--ring-color); opacity: 0.35; border-radius: 50%; border: 1px solid var(--ring-color); }
 .layers__sw--iso { background: var(--navy); opacity: 0.5; border-radius: 3px; }
 .layers__sw--node { background: var(--node-color); border-radius: 3px; }
+.layers__sw--labor { background: transparent; border: 1px dashed var(--labor-color); border-radius: 50%; }
+.layers__site { padding: 4px 0 6px; }
+.layers__site + .layers__site { border-top: 1px dashed var(--line); margin-top: 2px; }
+.layers__sitehd { font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; color: var(--ink); margin: 2px 0 3px; }
+.layers__row--feat { padding-left: 2px; font-size: 0.8rem; color: var(--ink-2); }
 .layers__mainrow { display: flex; align-items: center; gap: 4px; }
 .layers__mainrow .layers__row { flex: 1; }
 .layers__caret { border: none; background: none; color: var(--ink-muted); cursor: pointer; font-size: 0.72rem; padding: 4px 6px; transform: rotate(-90deg); transition: transform 0.15s; line-height: 1; }

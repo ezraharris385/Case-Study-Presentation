@@ -65,7 +65,7 @@
 
   /* ---------- Layer state (master + per-property) ---------- */
   var on = { sites: true, alt: true, ring: {}, iso: {}, labor: {}, bench: {} };
-  var expanded = { ring: false, iso: false, labor: false, bench: false };
+  var expanded = { sites: true, bench: false };
   function initState() {
     (D.nodes || []).forEach(function (n) { if (!(n.id in on.bench)) on.bench[n.id] = true; });
     (D.sites || []).forEach(function (s) { if (!(s.id in on.ring)) on.ring[s.id] = true; if (!(s.id in on.iso)) on.iso[s.id] = false; if (!(s.id in on.labor)) on.labor[s.id] = false; });
@@ -119,19 +119,23 @@
       var sub = expanded[catk] ? ('<div class="layers__sub">' + items.map(function (it) { return '<label class="layers__row layers__row--sub"><input type="checkbox" data-item="' + catk + '" data-id="' + it.id + '"' + (on[catk][it.id] ? " checked" : "") + '> <span>' + esc(it.label) + "</span></label>"; }).join("") + "</div>") : "";
       return '<div class="layers__cat">' + main + sub + "</div>";
     }
+    var feat = [{ cat: "ring", label: "10-mile reach", sw: "ring" }, { cat: "iso", label: "Drive-time reach", sw: "iso" }, { cat: "labor", label: "Labor shed", sw: "labor" }];
+    function featChk(f, id) { return '<label class="layers__row layers__row--feat"><input type="checkbox" data-item="' + f.cat + '" data-id="' + id + '"' + (on[f.cat][id] ? " checked" : "") + '> <i class="layers__sw layers__sw--' + f.sw + '"></i><span>' + f.label + "</span></label>"; }
+    function sitesBlock() {
+      var main = '<div class="layers__mainrow"><label class="layers__row"><input type="checkbox" data-grp="sites"' + (on.sites ? " checked" : "") + '> <i class="layers__sw layers__sw--site"></i><span>Finalist sites</span></label><button class="layers__caret' + (expanded.sites ? " is-open" : "") + '" data-expand="sites" aria-label="Per site">▾</button></div>';
+      var sub = expanded.sites ? ('<div class="layers__sub">' + (D.sites || []).map(function (s, i) {
+        return '<div class="layers__site"><div class="layers__sitehd">' + (i + 1) + ". " + esc(s.city) + '</div>' + feat.map(function (f) { return featChk(f, s.id); }).join("") + "</div>";
+      }).join("") + "</div>") : "";
+      return '<div class="layers__cat">' + main + sub + "</div>";
+    }
     var nodes = (D.nodes || []).map(function (n) { return { id: n.id, label: clean(n.name) }; });
-    var siteItems = (D.sites || []).map(function (s) { return { id: s.id, label: s.city }; });
     $("#layers").innerHTML =
       '<div class="layers__seg"><button class="layers__segbtn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">◱ Map</button><button class="layers__segbtn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">🛰 Satellite</button></div>' +
-      '<div class="layers__group"><div class="layers__title eyebrow">On the map</div>' +
-        simple("sites", "Finalist sites", on.sites, "site") +
+      '<div class="layers__group"><div class="layers__title eyebrow">On the map <span class="layers__hint">▾ reach &amp; labor per site</span></div>' +
+        sitesBlock() +
         simple("alt", "Also-considered", on.alt, "alt") +
-        cat("bench", "Benchmarks", "node", nodes) + "</div>" +
-      '<div class="layers__group"><div class="layers__title eyebrow">Reach &amp; labor <span class="layers__hint">▾ by property</span></div>' +
-        cat("ring", "10-mile reach", "ring", siteItems) +
-        cat("iso", "Drive-time reach", "iso", siteItems) +
-        cat("labor", "Labor shed", "labor", siteItems) + "</div>";
-    ["bench", "ring", "iso", "labor"].forEach(function (c) { var st = catState(c); var el = document.querySelector('[data-master="' + c + '"]'); if (el) el.indeterminate = st.some && !st.all; });
+        cat("bench", "Benchmarks", "node", nodes) + "</div>";
+    var be = document.querySelector('[data-master="bench"]'); if (be) { var bs = catState("bench"); be.indeterminate = bs.some && !bs.all; }
   }
   document.addEventListener("click", function (e) {
     var bb = e.target.closest(".layers__segbtn"); if (bb) { baseMode = bb.dataset.base; swapTiles(); buildLayersPanel(); return; }

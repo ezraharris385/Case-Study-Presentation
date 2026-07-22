@@ -55,7 +55,7 @@
 
   /* ---------- Layer state (master + per-property), mirrors desktop ---------- */
   var on = { sites: true, alt: false, ring: {}, iso: {}, labor: {}, bench: {} };
-  var expanded = { bench: false, ring: false, iso: false, labor: false };
+  var expanded = { sites: true, bench: false };
   var panelOpen = false;
   function initState() {
     (D.nodes || []).forEach(function (n) { if (!(n.id in on.bench)) on.bench[n.id] = true; });
@@ -111,22 +111,26 @@
       var sub = expanded[catk] ? ('<div class="mlay__sub">' + items.map(function (it) { return '<label class="mlay__row mlay__row--sub"><input type="checkbox" data-item="' + catk + '" data-id="' + it.id + '"' + (on[catk][it.id] ? " checked" : "") + '><span>' + esc(it.label) + "</span></label>"; }).join("") + "</div>") : "";
       return '<div class="mlay__cat">' + main + sub + "</div>";
     }
+    var feat = [{ cat: "ring", label: "10-mile reach", sw: "ring" }, { cat: "iso", label: "Drive-time reach", sw: "iso" }, { cat: "labor", label: "Labor shed", sw: "labor" }];
+    function featChk(f, id) { return '<label class="mlay__row mlay__row--feat"><input type="checkbox" data-item="' + f.cat + '" data-id="' + id + '"' + (on[f.cat][id] ? " checked" : "") + '><i class="mlay__sw mlay__sw--' + f.sw + '"></i><span>' + f.label + "</span></label>"; }
+    function sitesBlock() {
+      var main = '<div class="mlay__mainrow"><label class="mlay__row"><input type="checkbox" data-grp="sites"' + (on.sites ? " checked" : "") + '><i class="mlay__sw mlay__sw--site"></i><span>Finalist sites</span></label><button class="mlay__caret' + (expanded.sites ? " is-open" : "") + '" data-expand="sites" aria-label="Per site">▾</button></div>';
+      var sub = expanded.sites ? ('<div class="mlay__sub">' + (D.sites || []).map(function (s, i) {
+        return '<div class="mlay__site"><div class="mlay__sitehd">' + (i + 1) + ". " + esc(s.city) + "</div>" + feat.map(function (f) { return featChk(f, s.id); }).join("") + "</div>";
+      }).join("") + "</div>") : "";
+      return '<div class="mlay__cat">' + main + sub + "</div>";
+    }
     var nodes = (D.nodes || []).map(function (n) { return { id: n.id, label: shortNode(n) }; });
-    var siteItems = (D.sites || []).map(function (s) { return { id: s.id, label: s.city }; });
     var body =
       '<div class="mlay__seg"><button class="mlay__segbtn' + (baseMode === "street" ? " is-on" : "") + '" data-base="street">◱ Map</button><button class="mlay__segbtn' + (baseMode === "satellite" ? " is-on" : "") + '" data-base="satellite">🛰 Satellite</button></div>' +
-      '<div class="mlay__group"><div class="mlay__title">On the map</div>' +
-        simple("sites", "Finalist sites", on.sites, "site") +
+      '<div class="mlay__group"><div class="mlay__title">On the map <span class="mlay__hint">▾ reach &amp; labor per site</span></div>' +
+        sitesBlock() +
         simple("alt", "Also-considered", on.alt, "alt") +
-        cat("bench", "Benchmarks", "node", nodes) + "</div>" +
-      '<div class="mlay__group"><div class="mlay__title">Reach &amp; labor <span class="mlay__hint">▾ by property</span></div>' +
-        cat("ring", "10-mile reach", "ring", siteItems) +
-        cat("iso", "Drive-time reach", "iso", siteItems) +
-        cat("labor", "Labor shed", "labor", siteItems) + "</div>";
+        cat("bench", "Benchmarks", "node", nodes) + "</div>";
     $("#mlayers").innerHTML =
       '<button class="mlay__fab' + (panelOpen ? " is-open" : "") + '" id="mlayFab">' + (panelOpen ? "✕ Close" : "☰ Layers") + "</button>" +
       '<div class="mlay__panel"' + (panelOpen ? "" : " hidden") + ">" + body + "</div>";
-    ["bench", "ring", "iso", "labor"].forEach(function (c) { var st = catState(c); var el = document.querySelector('#mlayers [data-master="' + c + '"]'); if (el) el.indeterminate = st.some && !st.all; });
+    var be = document.querySelector('#mlayers [data-master="bench"]'); if (be) { var bs = catState("bench"); be.indeterminate = bs.some && !bs.all; }
   }
   $("#mlayers").addEventListener("click", function (e) {
     var fab = e.target.closest("#mlayFab"); if (fab) { panelOpen = !panelOpen; buildPanel(); return; }
