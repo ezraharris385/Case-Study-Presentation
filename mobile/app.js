@@ -149,7 +149,6 @@
       (s.rentDisplay ? '<div class="rentchip"><span class="eyebrow">Asking rent</span><strong>' + esc(s.rentDisplay) + "</strong></div>" : "") +
       '<div class="d-section"><h4>Building &amp; site</h4><dl class="kv">' + kv("Status", s.status) + kv("RBA", s.sizeSF ? fmt(s.sizeSF) + " SF" : "—") + kv("Available", s.availSF ? fmt(s.availSF) + " SF" : "—") + kv("Clear height", s.clearHeight) + kv("Dock doors", s.dockDoors) + kv("Drive-in", s.driveIns) + kv("Power", s.power) + kv("Year built", s.yearBuilt) + "</dl></div>" +
       '<div class="d-section"><h4>Site characteristics</h4>' + renderChecklist(s.checklist) + "</div>" +
-      ((s.incentives && s.incentives.length) ? '<div class="d-section"><h4>Incentives <span class="form-note">(high level)</span></h4><ul class="list-clean">' + s.incentives.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>" : "") +
       ((s.leaseTerms && s.leaseTerms.length) ? '<div class="d-section"><h4>Lease terms to prioritize</h4><div class="chips">' + s.leaseTerms.map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div></div>" : "") +
       (drive ? '<div class="d-section"><h4>Drive to benchmarks</h4><table class="table"><tbody>' + drive + "</tbody></table></div>" : "") +
       demoMini(s));
@@ -180,7 +179,6 @@
     var legend = function () { return '<p class="form-note">' + sites.map(function (s, i) { return (i + 1) + " = " + esc(siteLabel(s)); }).join(" · ") + "</p>"; };
     return [
       { t: "Client needs", h: function () { var r = (D.needs.requirements || []).map(function (x) { return "<tr><td>" + esc(x.label) + "</td><td>" + esc(x.value) + "</td></tr>"; }).join(""); return '<table class="table"><tbody>' + r + "</tbody></table>"; } },
-      { t: "Incentives", h: function () { return sites.map(function (s, i) { return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(siteLabel(s)) + '</h5><ul class="list-clean">' + (s.incentives || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; }).join("") + '<p class="form-note">Cook County (Class 6b territory) — subject to application.</p>'; } },
       { t: "Lease terms to prioritize", h: function () { return sites.map(function (s, i) { return '<h5 style="font-family:var(--font-display);margin:10px 0 4px">' + (i + 1) + ". " + esc(siteLabel(s)) + ' <span class="form-note">· ' + esc(s.rentDisplay || "") + '</span></h5><div class="chips">' + (s.leaseTerms || []).map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div>"; }).join(""); } },
       { t: "Demographics (10-mi)", h: function () {
         if (!sites.length || !sites[0].demo) return '<p class="form-note">No demographics.</p>';

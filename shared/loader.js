@@ -52,7 +52,6 @@ window.CockpitLoader = (function () {
     workforce: ["workforce", "warehouseworkforce", "laborforce", "laborpool", "employment"],
     avgWage: ["avgwage", "wage", "averagewage", "meanwage", "medianwage", "hourlywage"],
     unemployment: ["unemployment", "unemploymentrate", "unemp"],
-    incentives: ["incentives", "incentive", "incentivestack"],
     pros: ["pros", "strengths", "advantages", "positives"],
     cons: ["cons", "watchouts", "weaknesses", "risks", "concerns", "negatives"],
     whyOut: ["whyout", "whynot", "reasondropped", "reasonout", "whyeliminated", "droppedbecause", "reason"],
@@ -61,7 +60,7 @@ window.CockpitLoader = (function () {
   var SCORE = {
     power: ["scorepower", "powerscore"], labor: ["scorelabor", "laborscore"],
     access: ["scoreaccess", "accessscore", "logisticsscore", "logistics"],
-    cost: ["scorecost", "costscore"], incentives: ["scoreincentives", "incentivesscore"],
+    cost: ["scorecost", "costscore"],
     building: ["scorebuilding", "buildingscore", "suitabilityscore"],
     reach: ["scorereach", "reachscore", "marketreachscore"],
   };
@@ -96,7 +95,6 @@ window.CockpitLoader = (function () {
     var wg = pick(row, hm, A.avgWage); if (wg != null) labor.avgWage = wg;
     var un = pick(row, hm, A.unemployment); if (un != null) labor.unemployment = un;
     if (Object.keys(labor).length) s.labor = labor;
-    var inc = splitList(pick(row, hm, A.incentives)); if (inc.length) s.incentives = inc;
     var pros = splitList(pick(row, hm, A.pros)); if (pros.length) s.pros = pros;
     var cons = splitList(pick(row, hm, A.cons)); if (cons.length) s.cons = cons;
     return s;

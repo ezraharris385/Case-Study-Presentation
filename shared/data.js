@@ -98,11 +98,6 @@ window.CASE_DATA = {
       "owner": "Morgan Stanley & Co. LLC",
       "yearBuilt": 2015,
       "rentDisplay": "$9–11 NNN",
-      "incentives": [
-        "Cook County Class 6b property-tax incentive (likely eligible)",
-        "Illinois EDGE credit — jobs-based (if thresholds met)",
-        "City of Des Plaines TIF / local incentives (explore)"
-      ],
       "leaseTerms": [
         "Expense caps",
         "Direct metering",
@@ -2638,11 +2633,6 @@ window.CASE_DATA = {
       "owner": "MWI Property Group",
       "yearBuilt": 2022,
       "rentDisplay": "$12–14 NNN",
-      "incentives": [
-        "Cook County Class 6b property-tax incentive (likely eligible)",
-        "Illinois EDGE credit — jobs-based (if thresholds met)",
-        "Village of Palatine incentives (explore)"
-      ],
       "leaseTerms": [
         "Lease structure",
         "Rent escalations",
@@ -5174,11 +5164,6 @@ window.CASE_DATA = {
       "owner": null,
       "yearBuilt": 2024,
       "rentDisplay": "$13–15 NNN",
-      "incentives": [
-        "Cook County Class 6b property-tax incentive (likely eligible)",
-        "Illinois EDGE credit — jobs-based (if thresholds met)",
-        "Village of Arlington Heights incentives (explore)"
-      ],
       "leaseTerms": [
         "Lease structure",
         "Rent escalations",

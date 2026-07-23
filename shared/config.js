@@ -61,5 +61,5 @@ window.CASE_CONFIG = {
   // The public URL of the PHONE build (used to render the QR code on the desktop build).
   // Leave blank to auto-derive from wherever the page is hosted, or paste the phone URL, e.g.
   //   https://freshspan-sites.netlify.app/mobile/
-  phoneUrl: "",
+  phoneUrl: "https://freshspanfoods-mobile-presentation.netlify.app/mobile/",
 };

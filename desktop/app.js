@@ -181,7 +181,6 @@
         kv("Dock doors", s.dockDoors) + kv("Drive-in", s.driveIns) + kv("Power", s.power) + kv("Sprinklers", s.sprinklers) +
         kv("Year built", s.yearBuilt) + kv("Owner", s.owner) + "</dl></div>" +
       '<div class="d-section"><h4>Site characteristics</h4>' + renderChecklist(s.checklist) + "</div>" +
-      ((s.incentives && s.incentives.length) ? '<div class="d-section"><h4>Incentives <span class="form-note">(high level)</span></h4><ul class="list-clean">' + s.incentives.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>" : "") +
       ((s.leaseTerms && s.leaseTerms.length) ? '<div class="d-section"><h4>Lease terms to prioritize</h4><div class="chips">' + s.leaseTerms.map(function (x) { return '<span class="pill">' + esc(x) + "</span>"; }).join(" ") + "</div></div>" : "") +
       (drive ? '<div class="d-section"><h4>Drive to benchmarks</h4><table class="table"><thead><tr><th>Benchmark</th><th class="num">Dist</th><th class="num">Drive</th></tr></thead><tbody>' + drive + "</tbody></table></div>" : "") +
       demoMini(s)
@@ -226,14 +225,6 @@
       return head("Labor forces", "Workforce within 10 miles of each finalist") +
         '<table class="table"><thead><tr><th>Site</th><th class="num">Pop 10mi</th><th class="num">Labor force</th><th class="num">Transp/whse jobs</th><th class="num">Unemp.</th></tr></thead><tbody>' + rows + "</tbody></table>" +
         '<p class="form-note">Transport &amp; warehousing employment is the cold-chain-relevant labor pool. Toggle “Labor shed” on the map for the ~20-mile draw.</p>';
-    },
-    incentives: function () {
-      var blocks = (D.sites || []).map(function (s, i) {
-        var items = (s.incentives || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
-        return '<div class="d-section"><h4>' + (i + 1) + ". " + esc(siteLabel(s)) + '</h4><ul class="list-clean">' + items + "</ul></div>";
-      }).join("");
-      return head("Incentives", "High-level programs the sites may qualify for — subject to application") + blocks +
-        '<p class="form-note">All three sit in Cook County (Class 6b territory). Eligibility &amp; value to be confirmed with the county and municipalities.</p>';
     },
     lease: function () {
       var blocks = (D.sites || []).map(function (s, i) {
