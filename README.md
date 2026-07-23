@@ -34,9 +34,9 @@ index.html  landing page: desktop link + phone QR
    - **Source:** *Deploy from a branch*
    - **Branch:** `claude/internship-client-dashboard-gwpcz6` · **Folder:** `/ (root)` · **Save**
 3. Wait ~1 minute. Your site is at:
-   - Landing: `https://ezraharris385.github.io/case-study-presentation/`
-   - Desktop: `https://ezraharris385.github.io/case-study-presentation/desktop/`
-   - Phone: `https://ezraharris385.github.io/case-study-presentation/mobile/`
+   - Landing: `https://your-site.example/`
+   - Desktop: `https://your-site.example/desktop/`
+   - Phone: `https://your-site.example/mobile/`
 4. Put the **phone** URL into `shared/config.js → phoneUrl`, then regenerate the QR
    (`assets/qr-mobile.png`) — or just use the QR on the landing page.
 

@@ -292,7 +292,7 @@
   }
   function surveyUrl() {
     var s = CFG.survey || {};
-    if (s.mode === "formsubmit" && s.email) return "https://formsubmit.co/ajax/" + encodeURIComponent(s.email);
+    if (s.mode === "formsubmit" && (s.formToken || s.email)) return "https://formsubmit.co/ajax/" + encodeURIComponent(s.formToken || s.email);
     if (s.mode === "formspree" && s.endpoint) return s.endpoint;
     return "";
   }

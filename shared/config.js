@@ -34,7 +34,12 @@ window.CASE_CONFIG = {
     //               activation: submit once, then click the confirmation link in the inbox).
     // "formspree"  = Formspree endpoint (paste in `endpoint`).
     mode: "formsubmit",
-    email: "esharris3@wisc.edu",   // where survey feedback is emailed
+    // formToken = FormSubmit's random alias for your inbox (e.g. "a1b2c3d4e5..."). PREFERRED:
+    // it routes to the same inbox WITHOUT ever putting the email address in the shipped code.
+    // Get it from the FormSubmit activation email ("your form's unique URL"). When set, `email`
+    // below is ignored and never exposed to visitors.
+    formToken: "",
+    email: "",                     // fallback only; leave blank once formToken is set (keeps your address private)
     endpoint: "",                  // only for mode "formspree"
     consentNote: "Your feedback goes to the CBRE deal team. No personal data required.",
   },
@@ -54,7 +59,7 @@ window.CASE_CONFIG = {
   sharedDataOnly: true,
 
   // The public URL of the PHONE build (used to render the QR code on the desktop build).
-  // Fill in after you enable GitHub Pages, e.g.
-  //   https://ezraharris385.github.io/case-study-presentation/mobile/
+  // Leave blank to auto-derive from wherever the page is hosted, or paste the phone URL, e.g.
+  //   https://freshspan-sites.netlify.app/mobile/
   phoneUrl: "",
 };

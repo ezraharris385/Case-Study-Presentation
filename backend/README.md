@@ -9,7 +9,7 @@ pick one, paste one URL into `shared/config.js`, done.
 
 You own the data, it's free, and you can watch responses land **live** during Q&A.
 
-1. Go to <https://sheets.new> and make a blank sheet (sign in with your `@wisc.edu` account).
+1. Go to <https://sheets.new> and make a blank sheet (sign in with your Google account).
 2. **Extensions → Apps Script.**
 3. Delete the placeholder code, paste the entire contents of [`apps-script.gs`](./apps-script.gs), and click **Save** (💾).
 4. Click **Deploy → New deployment.**

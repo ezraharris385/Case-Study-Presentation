@@ -34,7 +34,7 @@ Assign the most important / peculiar-to-the-property terms per site, chosen from
 - **Granular layer toggles**: individual on/off for each benchmark AND each labor shed (all on, or turn off specific ones).
 
 ## Survey backend
-- **Email submissions to the user** (survey feedback → email). Options: Formspree (auto-emails) or Apps Script `MailApp.sendEmail` (email + Sheet). Confirm destination email (esharris3@wisc.edu?).
+- **Email submissions to the user** (survey feedback → email). Options: Formspree (auto-emails) or Apps Script `MailApp.sendEmail` (email + Sheet). Destination inbox is configured privately via FormSubmit (see shared/config.js).
 
 ## Attribution / compliance (images sourced from CoStar)
 - Credit each image to its **listing brokerage** (Birchwood = Brennan Investment Group; Sellstrom = MWI Property Group / Midwest Industrial Funds; Wilke = TBD).
